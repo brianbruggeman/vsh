@@ -26,7 +26,7 @@ general community, so this is its own project.
 
 Installation
 ------------
-To install ves, simply::
+To install vesty, simply::
 
     $ pip install vesty
 
@@ -72,16 +72,16 @@ Development
 
 To quickly startup in development mode, clone the source code from Github::
 
-    $ git clone https://github.com/brianbruggeman/ves.git ves
+    $ git clone https://github.com/brianbruggeman/vesty.git vesty
 
 Create and activate a virtual environment::
 
-    $ python3 -m venv $WORKON_HOME/ves
-    $ $WORKON_HOME/ves/bin/activate
+    $ python3 -m venv $WORKON_HOME/vesty
+    $ $WORKON_HOME/vesty/bin/activate
 
-Install ves in development mode::
+Install vesty in development mode::
 
-    (ves) $ cd ves && pip install -e .[all]
+    (ves) $ cd vesty && pip install -e .[all]
 
 Run the tests to verify that the setup is complete (and the tests pass)::
 

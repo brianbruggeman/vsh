@@ -16,7 +16,7 @@ import pytest
     ('ves --ls', {'show_envs': 1}, 0),
     ('ves', {}, 1),
     ])
-def test_ves_cli(tmpdir, mocked_api, command, expected, click_runner, exit_code):
+def test_vesty_cli(tmpdir, mocked_api, command, expected, click_runner, exit_code):
     """Tests `ves` command-line interface"""
     from vesty.cli.ves import ves
 
@@ -32,7 +32,7 @@ def test_ves_cli(tmpdir, mocked_api, command, expected, click_runner, exit_code)
 
 
 @pytest.mark.unit
-def test_ves_cli_multi_command(tmpdir, click_runner, mocked_api, venv_path):
+def test_vesty_cli_multi_command(tmpdir, click_runner, mocked_api, venv_path):
     """Tests `ves` command-line interface with multiple lines"""
     from vesty import api
     from vesty.cli.ves import ves
