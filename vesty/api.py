@@ -239,6 +239,7 @@ def validate_environment(path):
     Returns:
         bool: True if valid virtual environment path
     """
+    valid = None
     win32 = sys.platform == 'win32'
     # Expected structure
     structure = {
@@ -253,19 +254,23 @@ def validate_environment(path):
             paths[identifier] = p
             break
     if not all(identifier in paths for identifier in ['bin', 'include', 'lib']):
-        return False
-    if not win32:
+        valid = False
+    if valid is None and not win32:
         # check for pip and python binaries
         python_name = paths['lib'].parent.name
         python_ver_data = re.search('(?P<interpreter>python|pypy)\.?(?P<major>\d+)(\.?(?P<minor>\d+))', python_name)
-        python_ver_data = python_ver_data.groupdict()
-        major = python_ver_data.get('major')
-        pip_name = f'pip{major}' if major != '2' else 'pip'
-        python_executable = paths['bin'].joinpath(python_name)
-        pip_executable = paths['bin'].joinpath(pip_name)
-        if not (python_executable.exists() and pip_executable.exists()):
-            return False
-    return True
+        if python_ver_data:
+            python_ver_data = python_ver_data.groupdict()
+            major = python_ver_data.get('major')
+            pip_name = f'pip{major}' if major != '2' else 'pip'
+            python_executable = paths['bin'].joinpath(python_name)
+            pip_executable = paths['bin'].joinpath(pip_name)
+            if (python_executable.exists() and pip_executable.exists()):
+                valid = True
+    elif valid is None and win32:
+        # TODO: Add more validation for windows environments
+        valid = True
+    return valid
 
 
 # ----------------------------------------------------------------------
