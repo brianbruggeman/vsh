@@ -1,0 +1,15 @@
+# Single files or matchable globs
+include requirements.txt
+include entrypoints.txt
+
+# Folders
+graft ves
+
+# Prune
+prune docs
+prune requirements
+prune tests
+
+global-exclude *.rst
+global-exclude *.in
+global-exclude *.py[co]

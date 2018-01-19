@@ -1,0 +1,4 @@
+ipdb
+ipython <= 6; python_version < '2.8'
+ipython; python_version > '2.8'
+pdbpp

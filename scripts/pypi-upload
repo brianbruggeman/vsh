@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -ex
+repo_root=`git rev-parse --show-toplevel`
+project=`basename $repo_root`
+upload_args=${@:- -r pypi-test}
+venv="$project-pypi-release"
+
+cleanup () {
+    ves -r $venv \
+    && rm -Rf build dist
+}
+
+create_distribution () {
+    cd $repo_root \
+    && ves $venv python setup.py sdist bdist_wheel
+}
+
+setup_environment() {
+    rm -Rf build dist *.egg-info \
+    && pip install $repo_root \
+    && ves $venv type -a pip \
+    && ves $venv pip install $repo_root[pypi] \
+    && ves $venv pip install $repo_root
+}
+
+upload_distribution () {
+    dist_path=${1:-dist/} \
+    && dist_matched=`ls -t $dist_path/*.whl 2>/dev/null | head -1 2>/dev/null` \
+    && matched_gpg=`ls -t $dist_matched.asc  2>/dev/null | head -1 2>/dev/null` \
+    && rm -f $matched_gpg \
+    && ([[ -e "$dist_matched" ]] && ves $venv twine upload $upload_args -s $dist_matched)
+}
+
+main() {
+    setup_environment \
+    && create_distribution \
+    && upload_distribution \
+    && cleanup
+}
+
+
+main
