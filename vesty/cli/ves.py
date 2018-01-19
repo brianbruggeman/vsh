@@ -63,7 +63,9 @@ def ves(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path,
     home = os.getenv('HOME')
     workon_home = os.getenv('WORKON_HOME') or os.path.join(home, '.virtualenvs')
     path = path or os.path.join(workon_home, name)
-    exists = os.path.exists(path)
+
+    # Determine if an environment already exists
+    exists = api.validate_environment(path)
 
     if not command and not remove:
         command = os.getenv('SHELL')
