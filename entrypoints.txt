@@ -1,0 +1,2 @@
+# Package command-line interface
+ves = ves.cli.ves:ves

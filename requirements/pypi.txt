@@ -1,0 +1,5 @@
+# from: https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
+keyring
+setuptools
+twine
+wheel

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Bootstraps your development environment
+# TODO: Make this bullet-proof
+#       This should be runnable at any time, even after initial
+#       bootstrapping.
+set -ex
+git_root=$(git rev-parse --show-toplevel)
+project_name=$(basename "$git_root")
+pybin=${1:-python3}
+echo Bootstrapping "'$project_name'"
+
+
+clean () {
+    cd "$git_root"
+    for blob in "build dist .coverage.* *.egg-info .cache .eggs .tox htmlconv docs/_build docs/coverage docs/report"; do
+        rm -Rf $blob;
+    done
+    find "${git_root}" -name '*.pyc' -prune -delete
+    find "${git_root}" -name '__pycache__' -prune -delete
+    cd -
+}
+
+
+install_project () {
+    cd "$git_root"
+    [[ :$PATH: != *:"$HOME/.local/bin":* ]] && export PATH="$HOME/.local/bin:$PATH"
+    (command -v ves || echo "Installing ves into $HOME/.local/bin" && pip install --user ves) \
+    && ves $project_name echo "Created virtual environment $project_name" \
+    && ves "$project_name" pip install --upgrade --force -e .[all]
+    cd -
+}
+
+
+run_tests () {
+    cd "$git_root" \
+    && ves "$project_name" pytest --cache-clear \
+    && cd -
+}
+
+
+setup_git_hooks () {
+    top_repo_folder=$(git rev-parse --show-toplevel)
+    git_hooks_folder=$top_repo_folder/.git/hooks
+    tools_hooks_folder=$top_repo_folder/tools/git
+
+    cd "$git_root" \
+    && (
+        # Setup pre-commit
+        if [ ! -e "$git_hooks_folder/pre-commit" ] && [ ! -h "$git_hooks_folder/pre-commit" ]; then
+            ln -s "$tools_hooks_folder/multihooks.py" "$git_hooks_folder/pre-commit"
+        else
+            echo "WARNING: Could not copy over existing .git/hooks/pre-commit"
+        fi
+        if [ ! -e "$git_hooks_folder/pre-commit" ] && [ ! -h "$git_hooks_folder/pre-commit.d" ]; then
+            ln -s "$tools_hooks_folder/pre-commit.d" "$git_hooks_folder/pre-commit.d"
+        else
+            echo "WARNING: Could not copy over existing .git/hooks/pre-commit.d folder"
+        fi
+    ) \
+    && cd -
+}
+
+
+main () {
+    (
+        install_project \
+        && setup_git_hooks \
+        && clean \
+        && run_tests
+    ) || (>&2 echo "ERROR: Bootstrap failed.") && exit 1
+}
+
+main \
+&& echo "Bootstrap complete." \
+&& echo "Virtual environment, ${project_name}, should now be available using 'ves':  ves ${project_name}."

@@ -1,0 +1,37 @@
+# Mac
+.DS_STORE
+
+# Git
+.git
+.gitignore
+
+# Python
+*.egg
+*.egg-info
+*.vagrant
+.cache
+.coverage
+.eggs
+.ipynb_*
+.tox
+build/*
+dist/*
+__pycache__
+*/__pycache__
+**/__pycache__
+
+# Docker
+provision/*
+provision/**/*
+!provision/docker/ves/*
+!provision/docker/scripts/*
+docker-*.yml
+
+# Project
+requirements
+scripts
+doc
+tests
+tox.ini
+*.rst
+*.md
