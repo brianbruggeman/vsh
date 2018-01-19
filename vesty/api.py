@@ -175,7 +175,7 @@ def enter(path, command=None):
 
 
 def find_environment_folders(path=None):
-    path = path or os.getenv('WORKON_HOME')
+    path = path or os.getenv('WORKON_HOME') or os.path.join(os.getenv('HOME'), '.virtualenvs')
     for root, directories, files in os.walk(path):
         found = []
         for index, name in enumerate(directories):

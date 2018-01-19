@@ -12,7 +12,7 @@ __all__ = (
 # ----------------------------------------------------------------------
 __name__ = 'vesty'
 __description__ = 'A virtual environment shell'
-__ver__ = '0.3.1'  # Must follow pep440
+__ver__ = '0.4.0'  # Must follow pep440
 
 __author__ = 'Brian Bruggeman'
 __author_email__ = 'brian.m.bruggeman@gmail.com'

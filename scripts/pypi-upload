@@ -1,42 +1,117 @@
-#!/usr/bin/env bash
-set -ex
-repo_root=`git rev-parse --show-toplevel`
-project=`basename $repo_root`
-upload_args=${@:- -r pypi-test}
-venv="$project-pypi-release"
+#!/usr/bin/env python
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+from pathlib import Path
 
-cleanup () {
-    ves -r $venv \
-    && rm -Rf build dist
-}
-
-create_distribution () {
-    cd $repo_root \
-    && ves $venv python setup.py sdist bdist_wheel
-}
-
-setup_environment() {
-    rm -Rf build dist *.egg-info \
-    && pip install $repo_root \
-    && ves $venv type -a pip \
-    && ves $venv pip install $repo_root[pypi] \
-    && ves $venv pip install $repo_root
-}
-
-upload_distribution () {
-    dist_path=${1:-dist/} \
-    && dist_matched=`ls -t $dist_path/*.whl 2>/dev/null | head -1 2>/dev/null` \
-    && matched_gpg=`ls -t $dist_matched.asc  2>/dev/null | head -1 2>/dev/null` \
-    && rm -f $matched_gpg \
-    && ([[ -e "$dist_matched" ]] && ves $venv twine upload $upload_args -s $dist_matched)
-}
-
-main() {
-    setup_environment \
-    && create_distribution \
-    && upload_distribution \
-    && cleanup
-}
+from vesty import api
+from vesty.cli.click.api import command, option
 
 
-main
+@command()
+@option('-p', '--prod', is_flag=True, help="Install to https://upload.pypi.org/legacy/")
+def main(prod):
+    """Installs to https://test.pypi.org/legacy/ unless --prod is
+    specified
+    """
+    repo_path = Path(__file__).absolute().parent.parent
+    venv_path = os.path.join(os.getenv('HOME'), '.virtualenvs', repo_path.name + '-pypi-upload')
+    # determine git branch
+    cmd = shlex.split('git rev-parse --abbrev-ref HEAD')
+    branch = subprocess.check_output(cmd, cwd=str(repo_path)).strip().decode('utf-8')
+    if prod and branch != 'master':
+        print(f'Production can only be pushed from the master branch', file=sys.stderr)
+        sys.tracebacklimit = 0
+        sys.exit(1)
+
+    setup_venv(venv_path, repo_path)
+    create_distribution(venv_path)
+    upload_distribution(venv_path, repo_path, prod)
+    # cleanup(venv_path, repo_path)
+
+
+def cleanup(venv_path, repo_path):
+    """Removes venv and build artifacts
+
+    Args:
+        venv_path (str): path to virtual environment
+        repo_path (str): path to top of repository
+    """
+    repo_path = Path(repo_path)
+    api.remove(venv_path)
+
+    artifacts = ['build', 'dist']
+    for artifact in artifacts:
+        path = repo_path.joinpath(artifact)
+        if path.exists():
+            shutil.rmtree(str(path))
+
+
+def create_distribution(venv_path):
+    """Installs package into virtual environment and installs necessary
+    packages for upload to public pypi
+
+    Args:
+        venv_path (str): path to virtual environment
+    """
+    api.create(venv_path)
+    api.enter(venv_path, 'python setup.py sdist')
+
+
+def find_matched_gpg(repo_path):
+    repo_path = Path(repo_path)
+    # find distribution path
+    dist_path = str(repo_path.joinpath('dist'))
+    # find matched gpg
+    for root, folders, files in os.walk(dist_path):
+        for filename in files:
+            # Wheels don't support MANIFEST.in.
+            if filename.endswith('.tar.gz'):
+                dist_file_path = Path(os.path.join(root, filename.replace('.tar.gz', '')))
+                matched_gpg = Path(str(dist_file_path) + '.asc')
+                if matched_gpg.exists() and dist_file_path.exists():
+                    return str(dist_file_path), str(matched_gpg)
+
+
+def setup_venv(venv_path, repo_path):
+    """Installs package into virtual environment and installs necessary
+    packages for upload to public pypi
+
+    Args:
+        venv_path (str): path to virtual environment
+        repo_path (str): path to top of repository
+    """
+    repo_path = Path(repo_path)
+    artifacts = ['build', 'dist', 'vesty.egg-info']
+    for artifact in artifacts:
+        path = repo_path.joinpath(artifact)
+        if path.exists():
+            shutil.rmtree(str(path))
+
+    api.enter(venv_path, f'pip install {repo_path}[pypi]')
+    api.enter(venv_path, f'pip install {repo_path}')
+
+
+def upload_distribution(venv_path, repo_path, prod):
+    """Uploads distribution to pypi server
+
+    Args:
+        venv_path (str): path to virtual environment
+        repo_path (str): path to top of repository
+    """
+    found = find_matched_gpg(repo_path)
+    if found:
+        dist_file_path, matched_gpg = found
+        os.remove(matched_gpg)
+        upload_args = '-r pypi-test'
+        if prod:
+            upload_args = '-r pypi'
+        command = f'twine upload {upload_args} -s {wheel_path}'
+        print(command)
+        # api.enter(venv_path, command)
+
+
+if __name__ == '__main__':
+    main()

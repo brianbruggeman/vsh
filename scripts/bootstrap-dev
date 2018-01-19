@@ -24,7 +24,7 @@ clean () {
 install_project () {
     cd "$git_root"
     [[ :$PATH: != *:"$HOME/.local/bin":* ]] && export PATH="$HOME/.local/bin:$PATH"
-    (command -v ves || echo "Installing ves into $HOME/.local/bin" && pip install --user ves) \
+    (command -v ves || echo "Installing ves into $HOME/.local/bin" && pip install --user vesty) \
     && ves $project_name echo "Created virtual environment $project_name" \
     && ves "$project_name" pip install --upgrade --force -e .[all]
     cd -
