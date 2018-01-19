@@ -12,7 +12,7 @@ __all__ = (
 # ----------------------------------------------------------------------
 __name__ = 'vesty'
 __description__ = 'A virtual environment shell'
-__ver__ = '0.1.0'  # Must follow pep440
+__ver__ = '0.2.0'  # Must follow pep440
 
 __author__ = 'Brian Bruggeman'
 __author_email__ = 'brian.m.bruggeman@gmail.com'
@@ -24,7 +24,7 @@ __copyright_years__ = '2018'
 __license__ = 'MIT'
 __url__ = 'https://github.com/brianbruggeman/ves'
 
-__keywords__ = ['ves']
+__keywords__ = ['ves', 'vesty', 'virtual environment', 'venv']
 
 
 # See: https://pypi.python.org/pypi?%3Aaction=list_classifiers

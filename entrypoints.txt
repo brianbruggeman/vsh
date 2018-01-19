@@ -1,2 +1,2 @@
 # Package command-line interface
-ves = ves.cli.ves:ves
+ves = vesty.cli.ves:ves
