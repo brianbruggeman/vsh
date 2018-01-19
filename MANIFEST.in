@@ -3,7 +3,7 @@ include requirements.txt
 include entrypoints.txt
 
 # Folders
-graft ves
+graft vesty
 
 # Prune
 prune docs
