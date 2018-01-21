@@ -15,7 +15,7 @@ import pytest
     #
     ])
 def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip, prompt, python, verbose, interactive, dry_run):
-    from vsh.api import create
+    from vsh.api import create, validate_environment
 
     name = 'test-create'
     path = str(tmpdir.join(name))
@@ -38,25 +38,7 @@ def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip
             created_paths.append(filepath)
 
     # Validate structure
-    unexpected_paths = []
-    expected_paths = [
-        'pyvenv.cfg',
-        'bin',
-        'bin/activate',
-        'bin/python',
-        'include',
-        'lib',
-        ]
-    if include_pip is not False:
-        expected_paths.append('bin/pip')
-    else:
-        unexpected_paths.append('bin/pip')
-
-    for expected_path in expected_paths:
-        assert expected_path in created_paths
-
-    for unexpected_path in unexpected_paths:
-        assert unexpected_path not in created_paths
+    assert validate_environment(path) is True
 
 
 @pytest.mark.unit
