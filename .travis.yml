@@ -6,10 +6,8 @@ python:
   - pypy3
 
 install:
-  - python3 setup.py clean sdist bdist_wheel
-  - pip3 --upgrade --force install pip setuptools
+  - python3 setup.py clean sdist bdist_wheel install
   - pip3 install .[tests]
-  - pip3 install .
 
 script:
   - vsh --version
