@@ -52,8 +52,11 @@ def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip
     else:
         unexpected_paths.append('bin/pip')
 
-    assert all([expected_path in created_paths for expected_path in expected_paths])
-    assert all([unexpected_path not in created_paths for unexpected_path in unexpected_paths])
+    for expected_path in expected_paths:
+        assert expected_path in created_paths
+
+    for unexpected_path in unexpected_paths:
+        assert unexpected_path not in created_paths
 
 
 @pytest.mark.unit
