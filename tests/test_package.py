@@ -10,8 +10,8 @@ import pytest
     ("__maintainer__", "Brian Bruggeman"),
     ("__maintainer_email__", "brian.m.bruggeman@gmail.com"),
     ("__url__", "https://github.com/brianbruggeman/ves"),
-    ("__version__", "0.4.0"),
-    ("__version_info__", (0, 4, 0)),
+    ("__version__", "0.4.1"),
+    ("__version_info__", (0, 4, 1)),
     ])
 def test_project_metadata(key, expected_value):
     import vesty.__metadata__ as md

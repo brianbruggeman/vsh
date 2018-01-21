@@ -10,12 +10,13 @@ Update:
 import datetime
 import itertools
 import os
-import re
+import subprocess
 import sys
+from pathlib import Path
 
 import pip
 import pip.req
-from setuptools import find_packages, setup
+from setuptools import setup, Command
 
 try:
     import pypandoc
@@ -37,9 +38,108 @@ def main():
     setup(**metadata)
 
 
+class CleanCommand(Command, object):
+    description = 'Remove build artifacts and *.pyc'
+    user_options = list()
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        repo_path = str(Path(__file__).parent)
+        commands = [
+            f'rm -Rvf build _build dist wheelhouse *.egg-info *.egg .eggs',
+            f'find {repo_path} -name "*.py[co]" -type f -delete',
+            f'find {repo_path} -name "__pycache__" -type d -delete'
+            ]
+        for command in commands:
+            subprocess.run(command, shell=True, check=True)
+
+
+class BuildPexCommand(Command):
+    """Creates a python executable for distribution using Pex"""
+
+    @property
+    def description(self):
+        return self.__class__.__doc__
+
+
 # ----------------------------------------------------------------------
 # Support
 # ----------------------------------------------------------------------
+files_in_tree = set()
+folders_in_tree = set()
+
+
+def find_packages(top_path=None):
+    """Finds packages; replacement for setuptools.find_packages which
+    doesn't support PEP 420.
+
+    Lengthy discussion with no resolution:
+        https://github.com/pypa/setuptools/issues/97
+
+    Assumptions:
+      * Packages are folders
+      * Modules are files
+      * Namespaces are folders without modules
+      * setup.py is for a single package
+      * the folder which contains setup.py is _not_ a package itself
+      * each package falls under a single tree (e.g. requests, requests.api, etc.)
+      * the package is complex enough to have multiple sub folders/modules
+
+    Args:
+        top_path (str): path to check [default: path of setup.py]
+
+    Returns:
+        list(list, list, list): Returns packages, modules and namespaces
+
+    """
+    top = top_path or os.path.realpath(os.path.dirname(__file__))
+    packages = set()
+    modules = set()
+    namespaces = set()
+    python_artifacts = ['__pycache__']
+    repo_artifacts = ['.*']
+    install_artifacts = ['*.egg-info']
+    build_artifacts = ['dist', 'build']
+    test_files = ['tests', 'test', '.tox']
+    artifacts = install_artifacts + build_artifacts + repo_artifacts + python_artifacts + test_files
+    for path in scan_tree(top):
+        # Only include paths with .py
+        if not path.match('*.py'):
+            continue
+
+        # check folders
+        if any(p.match(artifact) for artifact in artifacts for p in path.parents):
+            continue
+
+        # There should be a valid package at this point
+        package_name = str(path.parent).replace(os.path.sep, '.')
+        module_name = str(path).replace(os.path.sep, '.').replace(path.suffix, '')
+        if package_name == '.':
+            module_name = f'.{module_name}'
+            if module_name == '.setup':
+                continue
+            modules.add(module_name)
+            continue
+
+        modules.add(module_name)
+        packages.add(package_name)
+
+    # find namespaces
+    for module_name in modules:
+        module_path = Path(module_name.replace('.', os.path.sep))
+        package_name = str(module_path.parent).replace(os.path.sep, '.')
+        if package_name in packages:
+            continue
+        namespaces.add(package_name)
+
+    return sorted(packages), sorted(modules), sorted(namespaces)
+
+
 def get_entrypoints(path=None):
     """
     """
@@ -60,10 +160,10 @@ def get_entrypoints(path=None):
 
 def get_license(top_path=None):
     """Reads license file and returns"""
-    path = top_path or os.path.realpath(os.path.dirname(__file__))
-    files = {f.lower(): f for f in os.listdir(path)}
+    repo_path = top_path or os.path.realpath(os.path.dirname(__file__))
+    files = {f.lower(): f for f in os.listdir(repo_path)}
     permutations = itertools.product(['license'], ['', '.txt'])
-    files = [os.path.join(path, f) for l, f in files.items() if l in permutations]
+    files = [os.path.join(repo_path, f) for l, f in files.items() if l in permutations]
     license = ''
     for filepath in files:
         with open(filepath, 'r') as stream:
@@ -76,23 +176,27 @@ def get_package_metadata(top_path=None):
     """Find the __metadata__.py file and read it"""
     repo_path = top_path or os.path.realpath(os.path.dirname(__file__))
     metadata = {}
+    prefixes = ('.', '_')
     for root, folders, files in os.walk(repo_path):
-        folders[:] = [_ for _ in folders if not _.startswith('.')]
-        files[:] = [_ for _ in files if _ == '__metadata__.py']
+        rel = root.replace(repo_path, '').lstrip(os.path.sep)
+        folders[:] = [
+            folder for folder in folders
+            if not any(folder.startswith(prefix) for prefix in prefixes)
+            ]
         for filename in files:
-            filepath = os.path.join(root, filename)
-            with open(filepath, 'r') as stream:
-                exec(stream.read(), globals(), metadata)
+            filepath = Path(os.path.join(rel, filename))
+            if filepath.name == '__metadata__.py':
+                exec(filepath.open().read(), globals(), metadata)
                 metadata = metadata.get('package_metadata') or metadata
                 break
         if metadata:
             break
 
     requirements, dependency_links = get_package_requirements(top_path=top_path)
-
+    packages, modules, namespaces = find_packages()
     # Package Properties
     metadata.setdefault('long_description', metadata.get('doc') or get_readme())
-    metadata.setdefault('packages', find_packages())
+    metadata.setdefault('packages', packages)
     metadata.setdefault('include_package_data', True)
 
     # Requirements
@@ -113,6 +217,9 @@ def get_package_metadata(top_path=None):
     year = datetime.datetime.now().year
     license = get_license() or 'Copyright {year} - all rights reserved'.format(year=year)
     metadata.setdefault('license', license)
+
+    # Add setuptools commands
+    metadata.setdefault('cmdclass', get_setup_commands())
     return metadata
 
 
@@ -120,49 +227,36 @@ def get_package_requirements(top_path=None):
     """Find all of the requirements*.txt files and parse them"""
     repo_path = top_path or os.path.realpath(os.path.dirname(__file__))
     requirements = {'extras': {}}
-    install_reqs = []
     dependency_links = set()
-    max_depth = 1
-    for root, folders, files in os.walk(repo_path):
-        depth = root[len(repo_path) + len(os.path.sep):].count(os.path.sep)
-        if depth > max_depth:
-            folders[:] = []
-        folders[:] = [_ for _ in folders if _ == 'requirements']
-        for filename in files:
-            filepath = os.path.join(root, filename)
-
-            # match on:
-            #    requirements.txt
-            #    requirements-<name>.txt
-            #    requirements_<name>.txt
-            #    requirements/<name>.txt
-            pattern = '.*requirements([-_/](?P<name>.*))?.txt$'
-            matched = re.match(pattern, filepath)
-            if not matched:
-                continue
-
-            name = matched.groupdict().get('name') or ''
-            reqs_, deps = parse_requirements(filepath)
-            # TODO: Fix install_reqs so it is processed first and
-            #       makes this filter meaningful.  Right now this
-            #       filter will only work if a requirements.txt file
-            #       is present because it is processed first implicitly.
-            #       If requirements/install.txt is used instead, then
-            #       This logic fails.
-            reqs_ = [_ for _ in reqs_ if _ not in install_reqs]
-            dependency_links.update(deps)
-            # either requirements.txt or requirements/install.txt but
-            #  not both
-            if (not name or name == 'install') and not install_reqs:
-                requirements['install'] = reqs_
-                install_reqs = reqs_
-            elif name in ['tests', 'test']:
-                requirements['tests'] = reqs_
-                requirements['extras']['tests'] = reqs_
-            elif name in ['setup']:
-                requirements['setup'] = reqs_
-            else:
-                requirements['extras'][name] = reqs_
+    # match on:
+    #    requirements.txt
+    #    requirements-<name>.txt
+    #    requirements_<name>.txt
+    #    requirements/<name>.txt
+    options = '_-/'
+    include_globs = ['requirements*.txt', 'requirements/*.txt']
+    paths = [
+        relpath
+        for relpath in scan_tree(repo_path, include=include_globs)
+        ]
+    for path in paths:
+        if 'requirements' in map(str, path.parents):
+            name = path.name.replace(path.suffix, '')
+        elif 'requirements' in path.name:
+            name = path.name.replace('requirements', '').lstrip(options)
+        else:
+            raise Exception(f'Could not find requirements using {path}')
+        reqs_, deps = parse_requirements(str(path.absolute()))
+        dependency_links.update(deps)
+        if name in ['install', '']:
+            requirements['install'] = reqs_
+        elif name in ['test', 'tests']:
+            requirements['tests'] = reqs_
+            requirements['extras']['tests'] = reqs_
+        elif name in ['setup']:
+            requirements['setup'] = reqs_
+        else:
+            requirements['extras'][name] = reqs_
 
     all_reqs = set()
     dev_reqs = set()
@@ -200,6 +294,13 @@ def get_readme(top_path=None):
     return readme
 
 
+def get_setup_commands():
+    """Returns setup command class list"""
+    return {
+        'clean': CleanCommand,
+        }
+
+
 def parse_requirements(path):
     template = '{name}{spec}'
     requirements = set()
@@ -223,6 +324,45 @@ def parse_requirements(path):
             pass
 
     return list(sorted(requirements)), list(sorted(dependency_links))
+
+
+def scan_tree(top_path=None, exclude=None, include=None):
+    """Finds files in tree
+
+    * Order is random
+    * Folders which start with . and _ are excluded unless excluded is used (e.g. [])
+    * This list is memoized
+
+    Args:
+        top_path (str): top of folder to search
+
+    Yields:
+        str: paths as found
+    """
+    repo_path = os.path.realpath(os.path.dirname(__file__))
+    if not files_in_tree:
+        for root, folders, files in os.walk(top_path or repo_path):
+            rel = root.replace(top_path or repo_path, '').lstrip('/')
+            # Control traversal
+            folders[:] = [f for f in folders if f not in ['.git']]
+            folders_in_tree.update(folders)
+            # Yield files
+            for filename in files:
+                relpath = Path(os.path.join(rel, filename))
+                if relpath not in files_in_tree:
+                    files_in_tree.add(relpath)
+                    if include is not None:
+                        if any(relpath.match(inc) for inc in include):
+                            yield relpath
+                    else:
+                        yield relpath
+    else:
+        for relpath in files_in_tree:
+            if include:
+                if any(relpath.match(inc) for inc in include):
+                    yield relpath
+            else:
+                yield relpath
 
 
 if __name__ == '__main__':
