@@ -78,6 +78,15 @@ def find_data_files(repo_path=None):
     """Captures files that are project specific"""
     repo_path = repo_path or Path(__file__).parent
 
+    include = ['LICENSE', 'requirements', 'requirements*.txt', 'entrypoints.txt']
+    found = [
+        path
+        for path in scan_tree(repo_path)
+        if (any(path.match(included) for included in include)
+            or any(parent.match(included) for parent in path.parents for included in include))
+        ]
+    return found
+
 
 def find_packages(repo_path=None):
     """Finds packages; replacement for setuptools.find_packages which
@@ -222,6 +231,9 @@ def get_package_metadata(top_path=None):
     year = datetime.datetime.now().year
     license = get_license() or 'Copyright {year} - all rights reserved'.format(year=year)
     metadata.setdefault('license', license)
+
+    # Extra data
+    metadata.setdefault('data_files', [('', find_data_files())])
 
     # Add setuptools commands
     metadata.setdefault('cmdclass', get_setup_commands())
