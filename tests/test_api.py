@@ -15,7 +15,7 @@ import pytest
     #
     ])
 def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip, prompt, python, verbose, interactive, dry_run):
-    from vesty.api import create
+    from vsh.api import create
 
     name = 'test-create'
     path = str(tmpdir.join(name))
@@ -60,10 +60,10 @@ def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip
 @pytest.mark.parametrize("command, expected_output", [
     # Simple echo command
     ('echo "Hello, World!"', "Hello, World!"),
-    ('env', "VES=test-create"),
+    ('env', "VSH=test-create"),
     ])
 def test_enter(tmpdir, capsys, command, expected_output):
-    from vesty.api import create, enter
+    from vsh.api import create, enter
 
     name = 'test-create'
     path = str(tmpdir.join(name))
@@ -91,8 +91,8 @@ def test_enter(tmpdir, capsys, command, expected_output):
     ('test-create', None, None),
     ])
 def test_remove(tmpdir, name, error_name, check):
-    from vesty.api import create, remove
-    from vesty import errors
+    from vsh.api import create, remove
+    from vsh import errors
 
     if name:
         path = str(tmpdir.join(name))
@@ -115,7 +115,7 @@ def test_remove(tmpdir, name, error_name, check):
 
 @pytest.mark.unit
 def test_show_envs(tmpdir, capsys):
-    from vesty.api import create, remove, show_envs
+    from vsh.api import create, remove, show_envs
 
     name = 'test-show-envs'
     path = str(tmpdir.join(name))
@@ -129,8 +129,8 @@ def test_show_envs(tmpdir, capsys):
 
 @pytest.mark.unit
 def test_show_version(tmpdir, capsys):
-    from vesty.api import show_version
-    from vesty.__metadata__ import package_metadata
+    from vsh.api import show_version
+    from vsh.__metadata__ import package_metadata
 
     version = package_metadata['version']
     show_version()

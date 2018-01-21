@@ -10,9 +10,9 @@ __all__ = (
 # ----------------------------------------------------------------------
 # Package Metadata (Update manually)
 # ----------------------------------------------------------------------
-__name__ = 'vesty'
+__name__ = 'vsh'
 __description__ = 'A virtual environment shell'
-__ver__ = '0.4.1'  # Must follow pep440
+__ver__ = '0.4.2'  # Must follow pep440
 
 __author__ = 'Brian Bruggeman'
 __author_email__ = 'brian.m.bruggeman@gmail.com'
@@ -22,9 +22,9 @@ __maintainer_email__ = 'brian.m.bruggeman@gmail.com'
 
 __copyright_years__ = '2018'
 __license__ = 'MIT'
-__url__ = 'https://github.com/brianbruggeman/ves'
+__url__ = 'https://github.com/brianbruggeman/vsh'
 
-__keywords__ = ['ves', 'vesty', 'virtual environment', 'venv']
+__keywords__ = ['vsh', 'virtual environment', 'venv']
 
 
 # See: https://pypi.python.org/pypi?%3Aaction=list_classifiers

@@ -8,7 +8,7 @@ counts = Counter()
 
 @pytest.fixture(scope='function')
 def click_runner():
-    from vesty.cli.click.testing import CliRunner
+    from vsh.cli.click.testing import CliRunner
 
     runner = CliRunner()
     yield runner
@@ -16,14 +16,14 @@ def click_runner():
 
 @pytest.fixture(scope='function')
 def package_name():
-    from vesty.__metadata__ import package_metadata
+    from vsh.__metadata__ import package_metadata
 
     return package_metadata['name']
 
 
 @pytest.fixture(scope='function')
 def package_version():
-    from vesty.__metadata__ import package_metadata
+    from vsh.__metadata__ import package_metadata
 
     return package_metadata['version']
 
@@ -37,7 +37,7 @@ def venv_path(tmpdir):
 
 @pytest.fixture(scope='function')
 def mock_api_create(venv_path):
-    from vesty import api
+    from vsh import api
 
     api.create = MagicMock(return_value=venv_path)
     return api.create
@@ -45,7 +45,7 @@ def mock_api_create(venv_path):
 
 @pytest.fixture(scope='function')
 def mock_api_enter():
-    from vesty import api
+    from vsh import api
 
     process_exit_code = 0
     api.enter = MagicMock(return_value=process_exit_code)
@@ -54,7 +54,7 @@ def mock_api_enter():
 
 @pytest.fixture(scope='function')
 def mock_api_remove(venv_path):
-    from vesty import api
+    from vsh import api
 
     api.remove = MagicMock(return_value=venv_path)
     return api.remove
@@ -62,7 +62,7 @@ def mock_api_remove(venv_path):
 
 @pytest.fixture(scope='function')
 def mock_api_show_envs():
-    from vesty import api
+    from vsh import api
 
     api.show_envs = MagicMock(return_value=None)
     return api.show_envs
@@ -70,7 +70,7 @@ def mock_api_show_envs():
 
 @pytest.fixture(scope='function')
 def mock_show_version():
-    from vesty import api
+    from vsh import api
 
     api.show_version = MagicMock(return_value=None)
     return api.show_version
@@ -78,7 +78,7 @@ def mock_show_version():
 
 @pytest.fixture(scope='function')
 def mocked_api(mock_api_create, mock_api_enter, mock_api_remove, mock_api_show_envs, mock_show_version):
-    """Mocks vesty api"""
+    """Mocks vsh api"""
 
     return {'create': mock_api_create,
             'enter': mock_api_enter,

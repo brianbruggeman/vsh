@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from .cli.ves import ves
+from .cli.vsh import vsh
 
 
 if __name__ == '__main__':
-    ves()
+    vsh()

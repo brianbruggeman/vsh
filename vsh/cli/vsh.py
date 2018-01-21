@@ -22,28 +22,28 @@ from .click import api as click
 @click.argument('name', metavar='[VENV_NAME]', required=False)
 @click.argument('command', required=False, nargs=-1)
 @click.pass_context
-def ves(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path, python, remove, verbose, version, name, command):
+def vsh(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path, python, remove, verbose, version, name, command):
     """
     \b
     To create and enter a new virtual environment:
-        ves <venv_name>
+        vsh <venv_name>
 
     \b
     To remove a previously created environment:
-        ves -r <venv_name>
+        vsh -r <venv_name>
 
     \b
     To create and enter an ephemeral environment:
-        ves -e <venv_name>
+        vsh -e <venv_name>
 
     \b
     To create a new ephemeral virtual environment, "e-venv", with Python 3.7 and no symlinks:
-        ves -ceP 3.7 e-venv
+        vsh -ceP 3.7 e-venv
 
     \b
     To run a command:
-        ves <venv_name> <command>
-        ves <venv_name> env | sort | grep VES
+        vsh <venv_name> <command>
+        vsh <venv_name> env | sort | grep VSH
 
     """
     return_code = 0
@@ -80,7 +80,7 @@ def ves(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path,
 
     if ephemeral and not remove:
         quoted_name = '"{name}"'.format(name=click.style(name, fg="yellow"))
-        rm_command = click.style(f'ves -r {name}', fg='blue')
+        rm_command = click.style(f'vsh -r {name}', fg='blue')
         support.echo(f'Virtual environment {quoted_name} existed previously.  Aborting removal.\nTo remove, run:\n\n    {rm_command}\n')
 
     if remove:

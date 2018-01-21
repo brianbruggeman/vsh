@@ -74,7 +74,12 @@ files_in_tree = set()
 folders_in_tree = set()
 
 
-def find_packages(top_path=None):
+def find_data_files(repo_path=None):
+    """Captures files that are project specific"""
+    repo_path = repo_path or Path(__file__).parent
+
+
+def find_packages(repo_path=None):
     """Finds packages; replacement for setuptools.find_packages which
     doesn't support PEP 420.
 
@@ -97,7 +102,7 @@ def find_packages(top_path=None):
         list(list, list, list): Returns packages, modules and namespaces
 
     """
-    top = top_path or os.path.realpath(os.path.dirname(__file__))
+    repo_path = repo_path or Path(__file__).parent
     packages = set()
     modules = set()
     namespaces = set()
@@ -107,7 +112,7 @@ def find_packages(top_path=None):
     build_artifacts = ['dist', 'build']
     test_files = ['tests', 'test', '.tox']
     artifacts = install_artifacts + build_artifacts + repo_artifacts + python_artifacts + test_files
-    for path in scan_tree(top):
+    for path in scan_tree(str(repo_path)):
         # Only include paths with .py
         if not path.match('*.py'):
             continue
@@ -339,16 +344,16 @@ def scan_tree(top_path=None, exclude=None, include=None):
     Yields:
         str: paths as found
     """
-    repo_path = os.path.realpath(os.path.dirname(__file__))
+    repo_path = Path(__file__)
     if not files_in_tree:
-        for root, folders, files in os.walk(top_path or repo_path):
-            rel = root.replace(top_path or repo_path, '').lstrip('/')
+        for root, folders, files in os.walk(str(top_path or repo_path)):
+            rel = Path(root.replace(str(top_path or repo_path), '').lstrip('/'))
             # Control traversal
             folders[:] = [f for f in folders if f not in ['.git']]
             folders_in_tree.update(folders)
             # Yield files
             for filename in files:
-                relpath = Path(os.path.join(rel, filename))
+                relpath = rel.joinpath(filename)
                 if relpath not in files_in_tree:
                     files_in_tree.add(relpath)
                     if include is not None:
