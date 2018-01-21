@@ -7,6 +7,7 @@ python:
 
 install:
   - python3 setup.py clean sdist bdist_wheel
+  - pip3 --upgrade --force install pip setuptools
   - pip3 install .[tests]
   - pip3 install .
 
