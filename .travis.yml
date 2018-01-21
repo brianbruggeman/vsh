@@ -11,4 +11,4 @@ install:
 
 script:
   - vsh --version
-  - pytest --cache-clear
+  - pytest --cache-clear -vvv -r a
