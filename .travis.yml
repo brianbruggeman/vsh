@@ -1,0 +1,17 @@
+language: python
+
+virtualenv:
+  system_site_packages: true
+
+python:
+  - "3.6"
+  - "nightly"
+  - pypy3
+
+install:
+  python setup.py clean sdist bdist_wheel
+  pip install .[tests]
+  pip install .
+
+script:
+  pytest --cache-clear

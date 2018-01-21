@@ -191,7 +191,7 @@ def find_environment_folders(path=None):
 
 
 def remove(path, verbose=None, interactive=None, dry_run=None, check=None):
-    """Removes a virtual environment
+    """Removsh a virtual environment
 
     Args:
         verbose (int, optional): more output [default: 0]
