@@ -80,7 +80,7 @@ def find_data_files(repo_path=None):
 
     include = ['LICENSE', 'requirements', 'requirements*.txt', 'entrypoints.txt']
     found = [
-        path
+        str(path)
         for path in scan_tree(repo_path)
         if (any(path.match(included) for included in include)
             or any(parent.match(included) for parent in path.parents for included in include))
