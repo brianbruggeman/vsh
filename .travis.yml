@@ -14,4 +14,5 @@ install:
   pip install .
 
 script:
+  vsh --version
   pytest --cache-clear
