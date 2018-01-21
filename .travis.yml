@@ -6,10 +6,10 @@ python:
   - pypy3
 
 install:
-  python setup.py clean sdist bdist_wheel
-  pip install .[tests]
-  pip install .
+  - python setup.py clean sdist bdist_wheel
+  - pip install .[tests]
+  - pip install .
 
 script:
-  vsh --version
-  pytest --cache-clear
+  - vsh --version
+  - pytest --cache-clear
