@@ -5,6 +5,12 @@ python:
   - "nightly"
   - pypy3
 
+matrix:
+  allow_failures:
+  - python: nightly
+  - python: pyp3
+
+
 install:
   - python3 setup.py clean sdist bdist_wheel install
   - pip3 install .[tests]
