@@ -50,13 +50,27 @@ class CleanCommand(Command, object):
 
     def run(self):
         repo_path = str(Path(__file__).parent)
-        commands = [
-            f'rm -Rvf build _build dist wheelhouse *.egg-info *.egg .eggs',
-            f'find {repo_path} -name "*.py[co]" -type f -delete',
-            f'find {repo_path} -name "__pycache__" -type d -delete'
+        removables = [
+            'build', '_build', 'dist', 'wheelhouse',
+            '*.egg-info', '*.egg', '.eggs'
             ]
-        for command in commands:
-            subprocess.run(command, shell=True, check=True)
+        for removable in removables:
+            for path in os.scandir(repo_path):
+                if Path(path).match(removable):
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                    elif path.is_file():
+                        os.remove(path)
+
+        for root, folders, files in os.walk(repo_path):
+            for folder in folders:
+                if folder == '__pycache__':
+                    fpath = os.path.join(root, folder)
+                    shutil.rmtree(fpath)
+            for filename in files:
+                fpath = os.path.join(root, filename)
+                if Path(filename).match('*.py[co]'):
+                    os.remove(fpath)
 
 
 class BuildPexCommand(Command):
@@ -74,7 +88,21 @@ files_in_tree = set()
 folders_in_tree = set()
 
 
-def find_packages(top_path=None):
+def find_data_files(repo_path=None):
+    """Captures files that are project specific"""
+    repo_path = repo_path or Path(__file__).parent
+
+    include = ['LICENSE', 'requirements', 'requirements*.txt', 'entrypoints.txt']
+    found = [
+        str(path)
+        for path in scan_tree(repo_path)
+        if (any(path.match(included) for included in include)
+            or any(parent.match(included) for parent in path.parents for included in include))
+        ]
+    return found
+
+
+def find_packages(repo_path=None):
     """Finds packages; replacement for setuptools.find_packages which
     doesn't support PEP 420.
 
@@ -97,7 +125,7 @@ def find_packages(top_path=None):
         list(list, list, list): Returns packages, modules and namespaces
 
     """
-    top = top_path or os.path.realpath(os.path.dirname(__file__))
+    repo_path = repo_path or Path(__file__).parent
     packages = set()
     modules = set()
     namespaces = set()
@@ -107,7 +135,7 @@ def find_packages(top_path=None):
     build_artifacts = ['dist', 'build']
     test_files = ['tests', 'test', '.tox']
     artifacts = install_artifacts + build_artifacts + repo_artifacts + python_artifacts + test_files
-    for path in scan_tree(top):
+    for path in scan_tree(str(repo_path)):
         # Only include paths with .py
         if not path.match('*.py'):
             continue
@@ -217,6 +245,9 @@ def get_package_metadata(top_path=None):
     year = datetime.datetime.now().year
     license = get_license() or 'Copyright {year} - all rights reserved'.format(year=year)
     metadata.setdefault('license', license)
+
+    # Extra data
+    metadata.setdefault('data_files', [('', find_data_files())])
 
     # Add setuptools commands
     metadata.setdefault('cmdclass', get_setup_commands())
@@ -339,16 +370,16 @@ def scan_tree(top_path=None, exclude=None, include=None):
     Yields:
         str: paths as found
     """
-    repo_path = os.path.realpath(os.path.dirname(__file__))
+    repo_path = Path(__file__)
     if not files_in_tree:
-        for root, folders, files in os.walk(top_path or repo_path):
-            rel = root.replace(top_path or repo_path, '').lstrip('/')
+        for root, folders, files in os.walk(str(top_path or repo_path)):
+            rel = Path(root.replace(str(top_path or repo_path), '').lstrip('/'))
             # Control traversal
             folders[:] = [f for f in folders if f not in ['.git']]
             folders_in_tree.update(folders)
             # Yield files
             for filename in files:
-                relpath = Path(os.path.join(rel, filename))
+                relpath = rel.joinpath(filename)
                 if relpath not in files_in_tree:
                     files_in_tree.add(relpath)
                     if include is not None:
