@@ -62,7 +62,7 @@ class CleanCommand(Command, object):
                     elif path.is_file():
                         os.remove(path)
 
-        for root, folders, files in os.path.walk(repo_path):
+        for root, folders, files in os.walk(repo_path):
             for folder in folders:
                 if folder == '__pycache__':
                     fpath = os.path.join(root, folder)
