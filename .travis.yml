@@ -1,0 +1,17 @@
+language: python
+
+python:
+  - "3.6"
+  - "nightly"
+
+matrix:
+  allow_failures:
+  - python: nightly
+
+install:
+  - python3 setup.py clean sdist bdist_wheel install
+  - pip3 install .[tests]
+
+script:
+  - vsh --version
+  - pytest --cache-clear -vvv -r a

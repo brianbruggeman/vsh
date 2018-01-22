@@ -1,15 +1,15 @@
 ==========================
-vesty
+vsh
 ==========================
+
+.. image:: https://travis-ci.org/brianbruggeman/vsh.svg?branch=develop
+    :target: https://travis-ci.org/brianbruggeman/vsh
 
 A virtual environment shell
 
 
 Motivation
 ----------
-
-Note: Vesty was ves but the name was taken on May 2, 2017.  Consequently,
-the package is named vesty, but command-line interface is still `ves`
 
 I was inspired by vex and pew to create a shell environment; I think
 that was the correct approach, but I wanted to extend the tool without
@@ -26,9 +26,9 @@ general community, so this is its own project.
 
 Installation
 ------------
-To install vesty, simply::
+To install vsh, simply::
 
-    $ pip install vesty
+    $ pip install vsh
 
 
 Documentation
@@ -72,16 +72,16 @@ Development
 
 To quickly startup in development mode, clone the source code from Github::
 
-    $ git clone https://github.com/brianbruggeman/vesty.git vesty
+    $ git clone https://github.com/brianbruggeman/vsh.git vsh
 
 Create and activate a virtual environment::
 
-    $ python3 -m venv $WORKON_HOME/vesty
-    $ $WORKON_HOME/vesty/bin/activate
+    $ python3 -m venv $WORKON_HOME/vsh
+    $ $WORKON_HOME/vsh/bin/activate
 
-Install vesty in development mode::
+Install vsh in development mode::
 
-    (ves) $ cd vesty && pip install -e .[all]
+    (ves) $ cd vsh && pip install -e .[all]
 
 Run the tests to verify that the setup is complete (and the tests pass)::
 

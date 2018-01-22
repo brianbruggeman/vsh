@@ -1,0 +1,9 @@
+# Single files or matchable globs
+include requirements.txt
+include entrypoints.txt
+
+# Folders
+graft vsh
+graft requirements
+
+global-exclude *.py[co]

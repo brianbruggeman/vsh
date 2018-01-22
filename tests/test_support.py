@@ -17,7 +17,7 @@ import pytest
     ('Stranger Things', False, '')
     ])
 def test_echo(capsys, text, verbose, expected):
-    from vesty.cli.support import echo
+    from vsh.cli.support import echo
 
     echo(text, verbose=verbose)
     out, err = capsys.readouterr()
@@ -38,10 +38,10 @@ def test_echo(capsys, text, verbose, expected):
     ('c', ['A', 'b', 'c'], 'd', 'c', None),
     ])
 def test_prompt(capsys, keystroke, valid_responses, default, expected, raised):
-    from vesty.cli.support import prompt
+    from vsh.cli.support import prompt
 
     result = None
-    with mock.patch('vesty.cli.click.api.getchar', create=True) as mocker:
+    with mock.patch('vsh.cli.click.api.getchar', create=True) as mocker:
         mocker.return_value = keystroke
         if raised:
             with pytest.raises(raised):
