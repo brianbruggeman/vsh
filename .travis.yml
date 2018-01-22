@@ -8,7 +8,7 @@ python:
 matrix:
   allow_failures:
   - python: nightly
-  - python: pyp3
+  - python: pypy3
 
 
 install:
