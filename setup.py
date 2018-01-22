@@ -50,13 +50,27 @@ class CleanCommand(Command, object):
 
     def run(self):
         repo_path = str(Path(__file__).parent)
-        commands = [
-            f'rm -Rvf build _build dist wheelhouse *.egg-info *.egg .eggs',
-            f'find {repo_path} -name "*.py[co]" -type f -delete',
-            f'find {repo_path} -name "__pycache__" -type d -delete'
+        removables = [
+            'build', '_build', 'dist', 'wheelhouse',
+            '*.egg-info', '*.egg', '.eggs'
             ]
-        for command in commands:
-            subprocess.run(command, shell=True, check=True)
+        for removable in removables:
+            for path in os.scandir(repo_path):
+                if Path(path).match(removable):
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                    elif path.is_file():
+                        os.remove(path)
+
+        for root, folders, files in os.path.walk(repo_path):
+            for folder in folders:
+                if folder == '__pycache__':
+                    fpath = os.path.join(root, folder)
+                    shutil.rmtree(fpath)
+            for filename in files:
+                fpath = os.path.join(root, filename)
+                if Path(filename).match('*.py[co]'):
+                    os.remove(fpath)
 
 
 class BuildPexCommand(Command):

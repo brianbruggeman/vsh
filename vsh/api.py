@@ -230,46 +230,72 @@ def show_version():
     support.echo(f"{package_metadata['name']} {package_metadata['version']}")
 
 
-def validate_environment(path):
+def validate_environment(path, check=None):
     """Validates if path is a virtual environment
 
     Args:
         path (str): path to virtual environment
+        check (bool, optional): Raise an error if path isn't valid
+
+    Raises:
+        InvalidEnvironmentError: when environment is not valid
 
     Returns:
         bool: True if valid virtual environment path
     """
+    path = Path(path)
     valid = None
     win32 = sys.platform == 'win32'
     # Expected structure
     structure = {
-        'bin': os.path.join(path, 'Scripts' if win32 else 'bin'),
-        'include': os.path.join(path, 'Include' if win32 else 'include'),
-        'lib': os.path.join(path, os.path.join('Lib', 'site-packages') if win32 else os.path.join('lib', '*', 'site-packages')),
+        'bin': 'Scripts' if win32 else 'bin',
+        'include': 'Include' if win32 else 'include',
+        'lib': os.path.join('Lib', 'site-packages') if win32 else os.path.join('lib', '*', 'site-packages'),
         }
     paths = {}
     for identifier, expected_path in structure.items():
-        for p in Path('/').glob(expected_path.lstrip('/')):
+        for p in path.glob(expected_path):
             # There should only be one path that matches the glob
             paths[identifier] = p
             break
-    if not all(identifier in paths for identifier in ['bin', 'include', 'lib']):
-        valid = False
-    if valid is None and not win32:
-        # check for pip and python binaries
+    for identifier in structure:
+        if identifier not in paths:
+            valid = False
+            if check:
+                raise InvalidEnvironmentError(f'Could not find {structure[identifier]} under {path}.')
+
+    if valid is not False and win32:
+        # TODO: Add more validation for windows environments
+        valid = valid is not False and True
+    elif valid is not False:
+        # check for activation scripts
+        activation_scripts = list(paths['bin'].glob('activate.*'))
+        valid = valid is not False and len(activation_scripts) > 0
+        if check and valid is False:
+            raise InvalidEnvironmentError(f'Could not find activation scripts under {path}.')
+
+        # check for pyvenv.cfg
+        pyvenv_config = paths['bin'].parent.joinpath('pyvenv.cfg')
+        valid = valid is not False and pyvenv_config.exists()
+        if check and valid is False:
+            raise InvalidEnvironmentError(f'Could not find pyvenv.cfg under {path}.')
+
+        # check for python binaries
         python_name = paths['lib'].parent.name
         python_ver_data = re.search('(?P<interpreter>python|pypy)\.?(?P<major>\d+)(\.?(?P<minor>\d+))', python_name)
         if python_ver_data:
             python_ver_data = python_ver_data.groupdict()
-            major = python_ver_data.get('major')
-            pip_name = f'pip{major}' if major != '2' else 'pip'
-            python_executable = paths['bin'].joinpath(python_name)
-            pip_executable = paths['bin'].joinpath(pip_name)
-            if (python_executable.exists() and pip_executable.exists()):
-                valid = True
-    elif valid is None and win32:
-        # TODO: Add more validation for windows environments
-        valid = True
+            python_executable = paths['bin'].joinpath('python')
+            python_ver_executable = paths['bin'].joinpath(python_name)
+            if python_executable.exists():
+                valid = valid is not False and True
+            if check and valid is False:
+                raise InvalidEnvironmentError(f'Could not find python executable under {path}.')
+            if python_ver_executable.exists():
+                valid = valid is not False and True
+            if check and valid is False:
+                raise InvalidEnvironmentError(f'Could not find {python_name} executable under {path}.')
+
     return valid
 
 
