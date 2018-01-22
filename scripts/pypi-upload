@@ -6,8 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from vesty import api
-from vesty.cli.click.api import command, echo, option, style
+from vsh import api
+from vsh.cli.click.api import command, echo, option, style
 
 
 @command()
@@ -84,7 +84,7 @@ def setup_venv(venv_path, repo_path):
         repo_path (str): path to top of repository
     """
     repo_path = Path(repo_path)
-    artifacts = ['build', 'dist', 'vesty.egg-info']
+    artifacts = ['build', 'dist', 'vsh.egg-info']
     for artifact in artifacts:
         path = repo_path.joinpath(artifact)
         if path.exists():
