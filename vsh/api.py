@@ -1,19 +1,18 @@
 import itertools
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
-
 import types
 import venv
 from pathlib import Path
-from .cli.click import api as click
 
 from .__metadata__ import package_metadata
 from .cli import support
-from .errors import (InterpreterNotFound, InvalidEnvironmentError,
-                     PathNotFoundError)
+from .cli.click import api as click
+from .errors import InterpreterNotFound, InvalidEnvironmentError, PathNotFoundError
 
 __all__ = ('create', 'enter', 'remove', 'show_envs', 'show_version')
 
@@ -161,15 +160,19 @@ def enter(path, command=None):
         command (tuple|list|str, optional): command to run in virtual env [default: shell]
     """
     path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
-    command = command or os.getenv('SHELL')
+    shell = os.getenv("SHELL")
+    command = command or shell
     env = _update_environment(path)
 
     # Setup the environment variables
     # TODO: Expand this
     # Activate and run
     if not isinstance(command, str):
-        command = ' '.join(command)
-    proc = subprocess.run(command, shell=True, env=env)
+        command = " ".join(command)
+        if Path(shell).name in ['bash', 'zsh']:
+            command = f'{shell} -i -c \"{command}\"'
+    command = shlex.split(command)
+    proc = subprocess.run(command, env=env, universal_newlines=True)
 
     return proc.returncode
 
@@ -340,18 +343,19 @@ def _update_environment(path):
     env = {k: v for k, v in os.environ.items()}
     env[package_metadata['name'].upper()] = name
 
-    venv = f'{click.style("venv", fg="magenta")} {click.style(name, fg="yellow")}'
+    venv = f'{click.style("vsh", fg="magenta")} {click.style(name, fg="yellow")}'
 
     env['VIRTUAL_ENV'] = path
     env['PATH'] = ':'.join([os.path.join(env.get('VIRTUAL_ENV'), 'bin')] + env['PATH'].split(':'))
 
-    shell = os.path.basename(env.get('SHELL')) or 'sh'
+    shell = Path(env.get('SHELL') or '/bin/sh').name
     disable_prompt = env.get('VIRTUAL_ENV_DISABLE_PROMPT') or None
     if not disable_prompt:
         if shell in ('bash', 'sh'):
-            env['PS1'] = f'{venv} {env.get("PS1")}'
+            ps1 = env.get("PS1") or click.style("\w", fg="blue") + "\$ "
+            env['PS1'] = f'{venv} {ps1}'
         elif shell in ('zsh',):
-            env['PROMPT'] = f'{venv} {env.get("PROMPT")}'
+            env['PROMPT'] = f'{venv} {env.get("PROMPT") or ""}'
         else:
             """TODO: Fix this for fish, csh, others, etc."""
 
