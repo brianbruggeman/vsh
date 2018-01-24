@@ -10,19 +10,25 @@ Update:
 import datetime
 import itertools
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import pip
 import pip.req
-from setuptools import setup, Command
+from setuptools import Command, setup
 
 try:
     import pypandoc
 except ImportError:
     pypandoc = None
 
+try:
+    import pex
+    from pex.commands.bdist_pex import bdist_pex
+except ImportError:
+    pex = None
 
 if sys.version_info < (3, 6):
     sys.stderr.write('Python 3.6+ is required for installation.\n')
@@ -71,14 +77,6 @@ class CleanCommand(Command, object):
                 fpath = os.path.join(root, filename)
                 if Path(filename).match('*.py[co]'):
                     os.remove(fpath)
-
-
-class BuildPexCommand(Command):
-    """Creates a python executable for distribution using Pex"""
-
-    @property
-    def description(self):
-        return self.__class__.__doc__
 
 
 # ----------------------------------------------------------------------
@@ -194,9 +192,10 @@ def get_license(top_path=None):
     files = [os.path.join(repo_path, f) for l, f in files.items() if l in permutations]
     license = ''
     for filepath in files:
-        with open(filepath, 'r') as stream:
-            license = stream.read()
-            break
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as stream:
+                license = stream.read()
+                break
     return license
 
 
@@ -327,9 +326,11 @@ def get_readme(top_path=None):
 
 def get_setup_commands():
     """Returns setup command class list"""
-    return {
+    commands = {
         'clean': CleanCommand,
         }
+    if pex: commands['bdist_pex'] = bdist_pex
+    return commands
 
 
 def parse_requirements(path):
