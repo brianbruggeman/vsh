@@ -135,6 +135,7 @@ def create(path, site_packages=None, overwrite=None, symlinks=None, upgrade=None
     Returns:
         str: path to venv
     """
+    verbose = verbose or 0
     path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
     name = os.path.basename(path)
     builder = _get_builder(path=path, site_packages=site_packages, overwrite=overwrite, symlinks=symlinks, upgrade=upgrade, include_pip=include_pip, prompt=prompt)
@@ -146,9 +147,7 @@ def create(path, site_packages=None, overwrite=None, symlinks=None, upgrade=None
             if not executable:
                 raise InterpreterNotFound(version=python)
             builder.create(env_dir=path, executable=executable)
-
-        support.echo(f'Created virtual environment "{name}" under: {path}', verbose=verbose)
-
+        support.echo('Created virtual environment "' + click.style(name, fg='yellow') + " under: " + click.style(path, fg='green'), verbose=verbose)
     return path
 
 
@@ -160,6 +159,7 @@ def enter(path, command=None, verbose=None):
         command (tuple|list|str, optional): command to run in virtual env [default: shell]
         verbose (int, optional): Adds more information to stdout
     """
+    verbose = verbose or 0
     path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
     shell = os.getenv("SHELL")
     command = command or shell
@@ -216,6 +216,7 @@ def remove(path, verbose=None, interactive=None, dry_run=None, check=None):
     Returns:
         str: folder path removed
     """
+    verbose = verbose or 0
     check = False if check is None else check
     path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
     if not validate_environment(path) and check is True:
@@ -227,7 +228,7 @@ def remove(path, verbose=None, interactive=None, dry_run=None, check=None):
             shutil.rmtree(path)
         elif check is True:
             raise PathNotFoundError(path=path)
-    support.echo(f'Removed: {path}', verbose=(verbose and path))
+    support.echo(click.style('Removed: ', fg='blue') + click.style(path, fg='green'), verbose=(max(verbose - 1, 0) and path))
     return path
 
 
