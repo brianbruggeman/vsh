@@ -152,12 +152,13 @@ def create(path, site_packages=None, overwrite=None, symlinks=None, upgrade=None
     return path
 
 
-def enter(path, command=None):
+def enter(path, command=None, verbose=None):
     """Enters a virtual environment
 
     Args:
         path (str): path to virtual environment
         command (tuple|list|str, optional): command to run in virtual env [default: shell]
+        verbose (int, optional): Adds more information to stdout
     """
     path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
     shell = os.getenv("SHELL")
@@ -167,13 +168,20 @@ def enter(path, command=None):
     # Setup the environment variables
     # TODO: Expand this
     # Activate and run
+    cmd_display = command
     if not isinstance(command, str):
         command = " ".join(command)
+        cmd_display = click.style(command, fg='green')
         if Path(shell).name in ['bash', 'zsh']:
             command = f'{shell} -i -c \"{command}\"'
+            cmd_display = f'{shell} -i -c \"{cmd_display}\"'
+    support.echo(click.style('Running command: ', fg='blue') + cmd_display, verbose=max(verbose - 1, 0))
     command = shlex.split(command)
     proc = subprocess.run(command, env=env, universal_newlines=True)
-
+    rc = proc.returncode
+    rc_color = 'green' if proc.returncode == 0 else 'red'
+    rc = click.style(str(rc), fg=rc_color)
+    support.echo(click.style('Command return code: ', fg='blue') + rc, verbose=verbose)
     return proc.returncode
 
 
