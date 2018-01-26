@@ -308,9 +308,9 @@ def get_package_requirements(top_path=None):
 def get_readme(top_path=None):
     """Read the readme for the repo"""
     path = top_path or os.path.realpath(os.path.dirname(__file__))
-    files = {f.lower(): f for f in os.listdir(path)}
-    permutations = itertools.product(['readme'], ['.md', '.rst', '.txt'])
-    files = [os.path.join(path, f) for l, f in files.items() if l in permutations]
+    found = {f.name.lower(): f.name for f in os.scandir(path)}
+    permutations = [a + b for a, b in itertools.product(['readme'], ['.md', '.rst', '.txt'])]
+    files = [os.path.join(path, f) for l, f in found.items() if l in permutations]
     readme = ''
     for filepath in files:
         if pypandoc and filepath.endswith('.md'):
@@ -328,7 +328,8 @@ def get_setup_commands():
     commands = {
         'clean': CleanCommand,
         }
-    if pex: commands['bdist_pex'] = bdist_pex
+    if pex:
+        commands['bdist_pex'] = bdist_pex
     return commands
 
 
