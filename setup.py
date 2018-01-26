@@ -11,7 +11,6 @@ import datetime
 import itertools
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -146,7 +145,7 @@ def find_packages(repo_path=None):
         package_name = str(path.parent).replace(os.path.sep, '.')
         module_name = str(path).replace(os.path.sep, '.').replace(path.suffix, '')
         if package_name == '.':
-            module_name = f'.{module_name}'
+            module_name = '.' + module_name
             if module_name == '.setup':
                 continue
             modules.add(module_name)
@@ -275,7 +274,7 @@ def get_package_requirements(top_path=None):
         elif 'requirements' in path.name:
             name = path.name.replace('requirements', '').lstrip(options)
         else:
-            raise Exception(f'Could not find requirements using {path}')
+            raise Exception('Could not find requirements using ' + path)
         reqs_, deps = parse_requirements(str(path.absolute()))
         dependency_links.update(deps)
         if name in ['install', '']:
