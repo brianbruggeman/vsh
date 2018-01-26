@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 from . import support
 from .. import api
@@ -43,9 +44,11 @@ def vsh(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path,
     \b
     To run a command:
         vsh <venv_name> <command>
-        vsh <venv_name> env | sort | grep VSH
+
+        For example: vsh <venv_name> env | sort | grep VSH
 
     """
+    verbose = verbose or 0
     return_code = 0
     if version:
         api.show_version()
@@ -55,14 +58,21 @@ def vsh(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path,
         api.show_envs()
         sys.exit(0)
 
+    if path and name:
+        # favor path over name
+        command = [name] + list(command)
+        name = Path(path).name
+
     if not (path or name):
-        click.echo(click.style('ERROR', fg='red') + ' A name or path must be provided.')
+        click.echo(vsh.get_help(ctx))
+        click.echo('\nERROR: A name or path must be provided.')
         sys.tracebacklimit = 0
         sys.exit(1)
 
-    home = os.getenv('HOME')
-    workon_home = os.getenv('WORKON_HOME') or os.path.join(home, '.virtualenvs')
-    path = path or os.path.join(workon_home, name)
+    if not path:
+        home = os.getenv('HOME')
+        workon_home = os.getenv('WORKON_HOME') or os.path.join(home, '.virtualenvs')
+        path = os.path.join(workon_home, name)
 
     # Determine if an environment already exists
     exists = api.validate_environment(path)
@@ -71,12 +81,12 @@ def vsh(ctx, copy, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path,
         command = os.getenv('SHELL')
 
     if not exists and not remove:
-        api.create(path, include_pip=not no_pip, overwrite=overwrite, symlinks=not copy, python=python)
+        api.create(path, include_pip=not no_pip, overwrite=overwrite, symlinks=not copy, python=python, verbose=verbose)
         if ephemeral:
             remove = True
 
     if command:
-        return_code = api.enter(path, command)
+        return_code = api.enter(path, command, verbose=max(verbose - 1, 0))
 
     if ephemeral and not remove:
         quoted_name = '"{name}"'.format(name=click.style(name, fg="yellow"))
