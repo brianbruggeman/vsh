@@ -9,9 +9,9 @@ from .click import api as click
 
 @click.command(context_settings={'ignore_unknown_options': True, 'allow_interspersed_args': False})
 @click.option('-c', '--copy', is_flag=True, help='Do not create symlinks for python')
+@click.option('-C', '--create-only', is_flag=True, help='Only create venv, do not enter')
 @click.option('-d', '--dry-run', is_flag=True, help='Do not make changes to the system')
 @click.option('-e', '--ephemeral', is_flag=True, help='Create and remove')
-@click.option('-E', '--do-not-enter', is_flag=True, help='Does not enter the vsh environment')
 @click.option('-i', '--interactive', is_flag=True, help='Run interactively')
 @click.option('-l', '--ls', is_flag=True, help='Show available virtual environments')
 @click.option('--no-pip', is_flag=True, help='Do not include pip')
@@ -24,7 +24,7 @@ from .click import api as click
 @click.argument('name', metavar='[VENV_NAME]', required=False)
 @click.argument('command', required=False, nargs=-1)
 @click.pass_context
-def vsh(ctx, copy, dry_run, ephemeral, do_not_enter, interactive, ls, no_pip, overwrite, path, python, remove, verbose, version, name, command):
+def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path, python, remove, verbose, version, name, command):
     """
     \b
     To create and enter a new virtual environment:
@@ -86,7 +86,7 @@ def vsh(ctx, copy, dry_run, ephemeral, do_not_enter, interactive, ls, no_pip, ov
         if ephemeral:
             remove = True
 
-    if command and not do_not_enter:
+    if command and not create_only:
         return_code = api.enter(path, command, verbose=max(verbose - 1, 0))
 
     if ephemeral and not remove:
