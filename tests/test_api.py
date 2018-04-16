@@ -59,8 +59,8 @@ def scan_tree(path):
     (None, None, None, None, None, 'temp', None, None, None, None),
     # use python3
     (None, None, None, None, None, None, '.'.join(map(str, sys.version_info[0:2])), None, None, None),
-    # use python2
-    (None, None, None, None, None, None, '2.7', None, None, None),
+    # use python3
+    (None, None, None, None, None, None, '3', None, None, None),
     # verbose
     (None, None, None, None, None, None, None, True, None, None),
     # interactive
