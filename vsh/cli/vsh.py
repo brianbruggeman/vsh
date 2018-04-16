@@ -19,12 +19,13 @@ from .click import api as click
 @click.option('--path', metavar='PATH', help='Path to virtual environment')
 @click.option('-p', '--python', metavar='VERSION', help='Python version to use')
 @click.option('-r', '--remove', is_flag=True, help='Remove virtual enironment')
+@click.option('-u', '--upgrade', is_flag=True, help='Upgrades to latest python version')
 @click.option('-v', '--verbose', count=True, help='More output')
 @click.option('-V', '--version', is_flag=True, help='Show version and exit')
 @click.argument('name', metavar='[VENV_NAME]', required=False)
 @click.argument('command', required=False, nargs=-1)
 @click.pass_context
-def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path, python, remove, verbose, version, name, command):
+def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path, python, remove, upgrade, verbose, version, name, command):
     """
     \b
     To create and enter a new virtual environment:
@@ -81,7 +82,10 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, ls, no_pip, ove
     if not command and not remove:
         command = os.getenv('SHELL')
 
-    if not exists and not remove:
+    if exists and upgrade:
+        pass
+
+    elif not exists and not remove:
         api.create(path, include_pip=not no_pip, overwrite=overwrite, symlinks=not copy, python=python, verbose=verbose)
         if ephemeral:
             remove = True
