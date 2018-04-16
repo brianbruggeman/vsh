@@ -10,8 +10,8 @@ import pytest
     ("__maintainer__", "Brian Bruggeman"),
     ("__maintainer_email__", "brian.m.bruggeman@gmail.com"),
     ("__url__", "https://github.com/brianbruggeman/vsh"),
-    ("__version__", "0.4.4"),
-    ("__version_info__", (0, 4, 4)),
+    ("__version__", "0.5.0"),
+    ("__version_info__", (0, 5, 0)),
     ])
 def test_project_metadata(key, expected_value):
     import vsh.__metadata__ as md
