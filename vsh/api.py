@@ -166,22 +166,52 @@ def enter(path, command=None, verbose=None):
     env = _update_environment(path)
     venv_name = click.style(Path(path).name, fg='green')
 
-    # Setup the environment variables
-    # TODO: Expand this with configuration code
-    # Activate and run
-    cmd_display = command
+    # Setup the environment scripts
+    vshell_config_commands = '; '.join(f'source {filepath}' for filepath in find_vsh_config_files())
     if not isinstance(command, str):
         command = " ".join(command)
-        cmd_display = click.style(command, fg='green')
-        if Path(shell).name in ['bash', 'zsh']:
-            command = f'{shell} -i -c \"{command}\"'
-            cmd_display = f'{shell} -i -c \"{cmd_display}\"'
+    if vshell_config_commands:
+        command = f'{vshell_config_commands}; {command}'
+    cmd_display = click.style(command, fg='green')
+    if Path(shell).name in ['bash', 'zsh']:
+        command = f'{shell} -i -c \"{command}\"'
+        cmd_display = f'{shell} -i -c \"{cmd_display}\"'
     support.echo(click.style(f'Running command in "', fg='blue') + venv_name + click.style(f'": ', fg='blue') + cmd_display, verbose=max(verbose - 1, 0))
+
+    # Activate and run
     return_code = subprocess.call(command, shell=True, env=env, universal_newlines=True)
     rc_color = 'green' if return_code == 0 else 'red'
     rc = click.style(str(return_code), fg=rc_color)
     support.echo(click.style('Command return code: ', fg='blue') + rc, verbose=verbose)
     return return_code
+
+
+def find_vsh_config_files():
+    try:
+        cmd = shlex.split('git rev-parse --show-toplevel')
+        top_of_current_repo_path = Path(subprocess.check_output(cmd).stdout.decode('utf-8'))
+    except Exception:
+        top_of_current_repo_path = None
+    paths = [
+        Path('/usr/local/etc/vsh'),
+        Path(os.getenv('HOME')),
+        Path('.'),
+        top_of_current_repo_path,
+        ]
+    for p in paths:
+        if not p:
+            continue
+        if p.exists():
+            config_path = p / '.vshrc'
+            if config_path.exists():
+                if config_path.is_file():
+                    yield config_path
+                elif config_path.is_dir():
+                    for root, folders, files in os.walk(str(config_path)):
+                        root = Path(root)
+                        for filename in files:
+                            filepath = root / filename
+                            yield filepath.absolute()
 
 
 def find_environment_folders(path=None):

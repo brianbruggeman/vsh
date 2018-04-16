@@ -25,11 +25,6 @@ try:
 except ImportError:
     pypandoc = None
 
-try:
-    import pex
-    from pex.commands.bdist_pex import bdist_pex
-except ImportError:
-    pex = None
 
 if sys.version_info < (3, 6):
     sys.stderr.write('Python 3.6+ is required for installation.\n')
@@ -330,8 +325,6 @@ def get_setup_commands():
     commands = {
         'clean': CleanCommand,
         }
-    if pex:
-        commands['bdist_pex'] = bdist_pex
     return commands
 
 

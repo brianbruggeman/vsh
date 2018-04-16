@@ -2,7 +2,7 @@
 vsh
 ==========================
 
-.. image:: https://travis-ci.org/brianbruggeman/vsh.svg?branch=develop
+.. image:: https://travis-ci.org/brianbruggeman/vsh.svg
     :target: https://travis-ci.org/brianbruggeman/vsh
 
 A virtual environment shell
