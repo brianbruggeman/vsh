@@ -91,7 +91,7 @@ class VenvBuilder(venv.EnvBuilder):
         create_if_needed(path)
         create_if_needed(libpath)
         # Issue 21197: create lib64 as a symlink to lib on 64-bit non-OS X POSIX
-        if ((sys.maxsize > 2**32) and (os.name == 'posix') and (sys.platform != 'darwin')):
+        if (sys.maxsize > 2**32) and (os.name == 'posix') and (sys.platform != 'darwin'):
             link_path = os.path.join(env_dir, 'lib64')
             if not os.path.exists(link_path):   # Issue #21643
                 os.symlink('lib', link_path)
@@ -140,7 +140,7 @@ def create(path, site_packages=None, overwrite=None, symlinks=None, upgrade=None
     name = os.path.basename(path)
     builder = _get_builder(path=path, site_packages=site_packages, overwrite=overwrite, symlinks=symlinks, upgrade=upgrade, include_pip=include_pip, prompt=prompt)
     prompt = f'Create virtual environment "{name}" under: {path}?'
-    run_command = support.prompt(prompt) == 'y' if interactive else True
+    run_command = click.confirm(prompt) if interactive else True
     if run_command:
         if not dry_run:
             executable = _get_interpreter(python)
@@ -164,9 +164,10 @@ def enter(path, command=None, verbose=None):
     shell = os.getenv("SHELL")
     command = command or shell
     env = _update_environment(path)
+    venv_name = click.style(Path(path).name, fg='green')
 
     # Setup the environment variables
-    # TODO: Expand this
+    # TODO: Expand this with configuration code
     # Activate and run
     cmd_display = command
     if not isinstance(command, str):
@@ -175,14 +176,12 @@ def enter(path, command=None, verbose=None):
         if Path(shell).name in ['bash', 'zsh']:
             command = f'{shell} -i -c \"{command}\"'
             cmd_display = f'{shell} -i -c \"{cmd_display}\"'
-    support.echo(click.style('Running command: ', fg='blue') + cmd_display, verbose=max(verbose - 1, 0))
-    command = shlex.split(command)
-    proc = subprocess.run(command, env=env, universal_newlines=True)
-    rc = proc.returncode
-    rc_color = 'green' if proc.returncode == 0 else 'red'
-    rc = click.style(str(rc), fg=rc_color)
+    support.echo(click.style(f'Running command in "', fg='blue') + venv_name + click.style(f'": ', fg='blue') + cmd_display, verbose=max(verbose - 1, 0))
+    return_code = subprocess.call(command, shell=True, env=env, universal_newlines=True)
+    rc_color = 'green' if return_code == 0 else 'red'
+    rc = click.style(str(return_code), fg=rc_color)
     support.echo(click.style('Command return code: ', fg='blue') + rc, verbose=verbose)
-    return proc.returncode
+    return return_code
 
 
 def find_environment_folders(path=None):
@@ -202,9 +201,10 @@ def find_environment_folders(path=None):
 
 
 def remove(path, verbose=None, interactive=None, dry_run=None, check=None):
-    """Removsh a virtual environment
+    """Remove a virtual environment
 
     Args:
+        path (str): path to virtual environment
         verbose (int, optional): more output [default: 0]
         interactive (bool, optional): ask before updating system [default: False]
         dry_run (bool, optional): do not update system
@@ -222,7 +222,7 @@ def remove(path, verbose=None, interactive=None, dry_run=None, check=None):
     if not validate_environment(path) and check is True:
         raise InvalidEnvironmentError(path=path)
     prompt = f'Remove {path}?'
-    run_command = support.prompt(prompt) == 'y' if interactive else True
+    run_command = click.confirm(prompt) == 'y' if interactive else True
     if run_command and not dry_run:
         if os.path.exists(path):
             shutil.rmtree(path)
@@ -333,6 +333,11 @@ def _get_interpreter(python=None):
     if python is None:
         return sys.executable
 
+    # Maybe the path is already supplied
+    if Path(python).exists():
+        return python
+
+    # Guess path
     paths = [os.path.join(path, '') for path in os.getenv('PATH').split(':')]
     if not python.startswith('p'):
         python = f'python{python}'

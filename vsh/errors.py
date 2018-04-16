@@ -1,6 +1,7 @@
 class BaseError(Exception):
     """Fancy error handler"""
-    def __init__(self, message=None, *args, **kwds):
+
+    def __init__(self, message=None, **kwds):
         if message is not None:
             message = message.format(**kwds) if kwds else message
         else:

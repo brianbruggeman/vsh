@@ -13,7 +13,7 @@ Motivation
 
 I was inspired by vex and pew to create a shell environment; I think
 that was the correct approach, but I wanted to extend the tool without
-any beauracracy or red tape.  Some of these choices could alienate the
+any bureaucracy or red tape.  Some of these choices could alienate the
 general community, so this is its own project.
 
 * Python 3.6+
@@ -39,16 +39,16 @@ Quickstart
 
 Enter or Create and enter a new virtual environment::
 
-    $ ves VenvName
+    $ vsh VenvName
     (VenvName) $
 
 Remove a previously created virtual environment::
 
-    $ ves -r VenvName
+    $ vsh -r VenvName
 
 Create an ephemeral virtual environment::
 
-    $ ves -e VenvName
+    $ vsh -e VenvName
 
 
 More Commands
@@ -81,11 +81,11 @@ Create and activate a virtual environment::
 
 Install vsh in development mode::
 
-    (ves) $ cd vsh && pip install -e .[all]
+    (vsh) $ cd vsh && pip install -e .[all]
 
 Run the tests to verify that the setup is complete (and the tests pass)::
 
-    (ves) $ pytest --cache-clear
+    (vsh) $ pytest --cache-clear
 
 Please feel free to submit pull requests and file bugs using the
 issue tracker.

@@ -14,8 +14,10 @@ import shutil
 import sys
 from pathlib import Path
 
-import pip
-import pip.req
+try:
+    import pip._internal.req as req
+except ImportError:
+    import pip.req as req
 from setuptools import Command, setup
 
 try:
@@ -116,7 +118,7 @@ def find_packages(repo_path=None):
       * the package is complex enough to have multiple sub folders/modules
 
     Args:
-        top_path (str): path to check [default: path of setup.py]
+        repo_path (str): path to check [default: path of setup.py]
 
     Returns:
         list(list, list, list): Returns packages, modules and namespaces
@@ -308,9 +310,9 @@ def get_package_requirements(top_path=None):
 def get_readme(top_path=None):
     """Read the readme for the repo"""
     path = top_path or os.path.realpath(os.path.dirname(__file__))
-    files = {f.lower(): f for f in os.listdir(path)}
-    permutations = itertools.product(['readme'], ['.md', '.rst', '.txt'])
-    files = [os.path.join(path, f) for l, f in files.items() if l in permutations]
+    found = {f.name.lower(): f.name for f in os.scandir(path)}
+    permutations = [a + b for a, b in itertools.product(['readme'], ['.md', '.rst', '.txt'])]
+    files = [os.path.join(path, f) for l, f in found.items() if l in permutations]
     readme = ''
     for filepath in files:
         if pypandoc and filepath.endswith('.md'):
@@ -328,7 +330,8 @@ def get_setup_commands():
     commands = {
         'clean': CleanCommand,
         }
-    if pex: commands['bdist_pex'] = bdist_pex
+    if pex:
+        commands['bdist_pex'] = bdist_pex
     return commands
 
 
@@ -336,15 +339,15 @@ def parse_requirements(path):
     template = '{name}{spec}'
     requirements = set()
     dependency_links = set()
-    for requirement in pip.req.parse_requirements(path, session="somesession"):
+    for requirement in req.parse_requirements(path, session="somesession"):
         if requirement.markers is not None and not requirement.markers.evaluate():
             continue
 
         name = requirement.name
         spec = str(requirement.req.specifier) if len(str(requirement.req.specifier)) else ''
-        req = template.format(name=name, spec=spec)
-        if req:
-            requirements.add(req)
+        req_ = template.format(name=name, spec=spec)
+        if req_:
+            requirements.add(req_)
 
         link = str(requirement.link) if requirement.link else ''
         if link:
@@ -357,7 +360,7 @@ def parse_requirements(path):
     return list(sorted(requirements)), list(sorted(dependency_links))
 
 
-def scan_tree(top_path=None, exclude=None, include=None):
+def scan_tree(top_path=None, include=None):
     """Finds files in tree
 
     * Order is random
@@ -366,6 +369,7 @@ def scan_tree(top_path=None, exclude=None, include=None):
 
     Args:
         top_path (str): top of folder to search
+        include (list, optional): filters on include if present
 
     Yields:
         str: paths as found
