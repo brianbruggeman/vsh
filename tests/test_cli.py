@@ -15,6 +15,7 @@ import pytest
     ('vsh --no-pip test-vsh-cli env', {'create': 1, 'enter': 1}, 0),
     ('vsh --ls', {'show_envs': 1}, 0),
     ('vsh', {}, 1),
+    ('vsh -C tmp-venv', {'create': 1}, 0),
     ])
 def test_vsh_cli(tmpdir, mocked_api, command, expected, click_runner, exit_code):
     """Tests `vsh` command-line interface"""
