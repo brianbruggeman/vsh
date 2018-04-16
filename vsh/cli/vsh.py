@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -7,7 +8,56 @@ from .. import api
 from .click import api as click
 
 
-@click.command(context_settings={'ignore_unknown_options': True, 'allow_interspersed_args': False})
+def find_existing_venv_names():
+    home = os.getenv('HOME')
+    workon_home = os.getenv('WORKON_HOME')
+    venvs_home = None
+    if workon_home and Path(workon_home).exists():
+        venvs_home = Path(workon_home)
+    elif home and Path(home / '.virtualenvs').exists():
+        venvs_home = Path(home / '.virtualenvs')
+
+    if venvs_home and venvs_home.exists():
+        standard_path = ['include', 'lib', 'bin']
+        for path in os.scandir(venvs_home):
+            if Path(path).is_dir():
+                if Path(path).stem.startswith('-'):
+                    continue
+                if Path(path).stem not in standard_path:
+                   yield Path(path).stem
+
+
+default_help = """
+\b
+To create and enter a new virtual environment:
+    vsh <venv_name>
+
+\b
+To remove a previously created environment:
+    vsh -r <venv_name>
+
+\b
+To create and enter an ephemeral environment:
+    vsh -e <venv_name>
+
+\b
+To create a new ephemeral virtual environment, "e-venv", with Python 3.7 and no symlinks:
+    vsh -ceP 3.7 e-venv
+
+\b
+To run a command:
+    vsh <venv_name> <command>
+\b
+    For example: vsh <venv_name> env | sort | grep VSH
+   
+\b 
+Available Virtual Environments:
+    {envs}
+
+""".format(envs="\n    ".join(f'{name:<12}' for name in sorted(find_existing_venv_names())))
+
+
+@click.command(help=default_help, context_settings={'ignore_unknown_options': True, 'allow_interspersed_args': False})
 @click.option('-c', '--copy', is_flag=True, help='Do not create symlinks for python')
 @click.option('-C', '--create-only', is_flag=True, help='Only create venv, do not enter')
 @click.option('-d', '--dry-run', is_flag=True, help='Do not make changes to the system')
@@ -22,34 +72,15 @@ from .click import api as click
 @click.option('-u', '--upgrade', is_flag=True, help='Upgrades to latest python version')
 @click.option('-v', '--verbose', count=True, help='More output')
 @click.option('-V', '--version', is_flag=True, help='Show version and exit')
-@click.argument('name', metavar='[VENV_NAME]', required=False)
+@click.option('--shell-completion', is_flag=True, help='Show shell completion code')
+@click.argument('name', metavar='VENV_NAME', required=False)
 @click.argument('command', required=False, nargs=-1)
 @click.pass_context
-def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, ls, no_pip, overwrite, path, python, remove, upgrade, verbose, version, name, command):
-    """
-    \b
-    To create and enter a new virtual environment:
-        vsh <venv_name>
+def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, shell_completion, ls, no_pip, overwrite, path, python, remove, upgrade, verbose, version, name, command):
+    if shell_completion:
+        subprocess.run('_VSH_COMPLETE=source vsh', shell=True)
+        sys.exit(0)
 
-    \b
-    To remove a previously created environment:
-        vsh -r <venv_name>
-
-    \b
-    To create and enter an ephemeral environment:
-        vsh -e <venv_name>
-
-    \b
-    To create a new ephemeral virtual environment, "e-venv", with Python 3.7 and no symlinks:
-        vsh -ceP 3.7 e-venv
-
-    \b
-    To run a command:
-        vsh <venv_name> <command>
-
-        For example: vsh <venv_name> env | sort | grep VSH
-
-    """
     verbose = verbose or 0
     return_code = 0
     if version:
