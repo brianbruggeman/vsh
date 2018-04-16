@@ -43,21 +43,52 @@ def scan_tree(path):
 @pytest.mark.parametrize("site_packages, overwrite, symlinks, upgrade, include_pip, prompt, python, verbose, interactive, dry_run", [
     # Defaults
     (None, None, None, None, None, None, None, None, None, None),
+    # use site-packages
+    (True, None, None, None, None, None, None, None, None, None),
+    # overwrite
+    (None, True, None, None, None, None, None, None, None, None),
+    # symlinks
+    (None, None, True, None, None, None, None, None, None, None),
+    # upgrade
+    (None, None, None, True, None, None, None, None, None, None),
+    # include_pip
+    (None, None, None, None, True, None, None, None, None, None),
     # include_pip is False
     (None, None, None, None, False, None, None, None, None, None),
-    # use python
+    # prompt
+    (None, None, None, None, None, 'temp', None, None, None, None),
+    # use python3
     (None, None, None, None, None, None, '.'.join(map(str, sys.version_info[0:2])), None, None, None),
-    #
+    # use python2
+    (None, None, None, None, None, None, '2.7', None, None, None),
+    # verbose
+    (None, None, None, None, None, None, None, True, None, None),
+    # interactive
+    (None, None, None, None, None, None, None, None, True, None),
+    # dry run
+    (None, None, None, None, None, None, None, None, None, True),
     ])
 def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip, prompt, python, verbose, interactive, dry_run):
     from vsh import api
+    # TODO: mock dry-runs and interactive behaviors
+    interactive = False
+    dry_run = False
 
     name = 'test-create'
     path = str(tmpdir.join(name))
     assert not os.path.exists(path)
-
-    created_path = api.create(path=path, site_packages=site_packages, overwrite=overwrite, symlinks=symlinks, upgrade=upgrade,
-                              include_pip=include_pip, python=python, prompt=prompt, verbose=verbose, interactive=interactive, dry_run=dry_run)
+    created_path = api.create(
+        path=path,
+        site_packages=site_packages,
+        overwrite=overwrite,
+        symlinks=symlinks,
+        upgrade=upgrade,
+        include_pip=include_pip,
+        prompt=prompt,
+        python=python,
+        verbose=verbose,
+        interactive=interactive,
+        dry_run=dry_run)
     assert created_path == path
     assert os.path.exists(created_path)
 
@@ -75,7 +106,8 @@ def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip
 
     files_in_structure = list(scan_tree(path))  # noqa
     # Validate structure
-    assert api.validate_environment(path) is True
+    expected_valid = True if not any([dry_run, upgrade]) else False
+    assert api.validate_environment(path) is expected_valid
 
 
 @pytest.mark.unit
