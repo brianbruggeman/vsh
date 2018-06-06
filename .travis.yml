@@ -9,9 +9,10 @@ matrix:
   - python: nightly
 
 install:
-  - python3 setup.py clean sdist bdist_wheel install
-  - pip3 install .[tests]
+  - python -m pip install -U pip
+  - python setup.py clean sdist bdist_wheel install
+  - pip install .[tests]
 
 script:
   - vsh --version
-  - pytest --cache-clear -vvv -r a
+  - python -m pytest --cache-clear -vvv -r a
