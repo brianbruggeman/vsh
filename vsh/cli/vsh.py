@@ -14,8 +14,8 @@ def find_existing_venv_names():
     venvs_home = None
     if workon_home and Path(workon_home).exists():
         venvs_home = Path(workon_home)
-    elif home and Path(home / '.virtualenvs').exists():
-        venvs_home = Path(home / '.virtualenvs')
+    elif home and (Path(home) / '.virtualenvs').exists():
+        venvs_home = Path(home) / '.virtualenvs'
 
     if venvs_home and venvs_home.exists():
         standard_path = ['include', 'lib', 'bin']
