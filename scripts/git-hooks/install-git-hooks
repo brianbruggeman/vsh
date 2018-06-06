@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Bootstrap git hooks.
+"""
+import argparse
+import os
+import subprocess
+import sys
+from contextlib import contextmanager
+from pathlib import Path
+
+
+@contextmanager
+def cd(path):
+    original_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(original_dir)
+
+
+def box(text, char='-', width=60):
+    bar = f'+{char * width}+'
+    content = f'| {" " + text:^{len(bar) - 4}} |'
+    return f'{bar}\n{content}\n{bar}'
+
+
+verbosity = 0
+dryrun = False
+
+
+def run(cmd, dryrun=False, return_stdout=False):
+    if verbosity > 0:
+        print(f'running: {cmd}')
+    if return_stdout:
+        process = subprocess.run(cmd, check=True, shell=True, stdout=subprocess.PIPE)
+        return str(process.stdout, 'utf-8').strip()
+    else:
+        if not dryrun:
+            return subprocess.run(cmd, check=True, shell=True)
+
+
+project_dir = Path(run('git rev-parse --show-toplevel', return_stdout=True))
+git_hooks_dir = project_dir / '.git' / 'hooks'
+tools_hooks_dir = project_dir / 'scripts' / 'git-hooks'
+
+
+def setup_git_hooks(dryrun=False):
+    with cd(project_dir):
+        print(box('Setting up git hooks'))
+        if not dryrun:
+            git_hooks_dir.mkdir(parents=True, exist_ok=True)
+
+        src = tools_hooks_dir / 'multihooks.py'
+
+        # adds multi-hooks for each folder
+        for folder in (project_dir / 'scripts' / 'git-hooks').glob('*'):
+            if not folder.is_dir():
+                continue
+
+            hook_name = folder.stem
+            hook_dst = git_hooks_dir / hook_name
+            if not hook_dst.resolve().exists():
+                hook_dst.symlink_to(src)
+            else:
+                print(f'WARNING: Could not copy over existing {hook_dst}')
+
+            hooks_folder = tools_hooks_dir / folder
+            if not hooks_folder.resolve().exists():
+                hooks_folder.symlink_to(str(folder.absolute()), target_is_directory=True)
+            else:
+                print(f'WARNING: Could not copy over existing {hooks_folder}')
+                continue
+
+        print('done')
+
+
+def bootstrap():
+    try:
+        parser = argparse.ArgumentParser(description='bootstrap dev environment')
+        parser.add_argument('-v', '--verbosity', action='count', default=0, help='increase output verbosity')
+        parser.add_argument('--dry-run', action='store_true', help='just print the commands to run')
+        args = parser.parse_args()
+
+        global verbosity
+        verbosity = args.verbosity
+
+        setup_git_hooks()
+
+        print(f"bootstrap succeeded.")
+    except Exception as error:
+        print(f'ERROR: bootstrap failed\n{error}')
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    bootstrap()

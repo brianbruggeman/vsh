@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+import subprocess
+from pathlib import Path
+
+
+def run_smoketest():
+    errors = 0
+    branch_name = run("git status | sed -n 1p | cut -d' ' -f 3")
+    if branch_name not in ['develop', 'master']:
+        exit(0)
+    output, errorcode = run('pytest -x -q')
+    if errorcode:
+        print(output)
+        error('pytest failed')
+
+
+def error(message, code=1):
+    """Display error message within a template and exit using code.
+
+    Args:
+        message (str): message to display
+        code (int, optional): exit code
+
+    """
+    print(f'ERROR: PUSH REJECTED.  {message}.  Please fix them and commit again.')
+    exit(code)
+
+
+def run(command, check=None, root_dir=None):
+    """Runs a command and returns stdout encoded as utf-8
+
+    Args:
+        command (str): command to run
+        check (bool, optional): raise error when returncode is not 0
+        root_dir (bool, optional): run from the top of the repo
+
+    Returns:
+        str: stdout
+
+    """
+    cwd = None
+    if root_dir:
+        repo_path = subprocess.run('git rev-parse --show-toplevel', shell=True, check=True).stdout.decode('utf-8')
+        cwd = repo_path
+    if cwd:
+        proc = subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=check, cwd=cwd)
+    else:
+        proc = subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=check)
+
+    stdout = proc.stdout.decode('utf-8')
+    if not check:
+        return stdout, proc.returncode
+    if check:
+        return stdout
+
+
+if __name__ == '__main__':
+    run_smoketest()
