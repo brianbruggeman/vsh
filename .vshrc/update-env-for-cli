@@ -1,1 +1,3 @@
-eval "$(_VSH_COMPLETE=source vsh)"
+if [[ -x "$(command -v vsh)" ]] ; then
+    eval "$(_VSH_COMPLETE=source vsh)" 2>/dev/null
+fi;

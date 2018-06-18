@@ -7,61 +7,70 @@ import sys
 from pathlib import Path
 
 from vsh import api
-from vsh.cli.click.api import command, echo, option, style
+from vsh.cli import support
+from vsh.cli.click.api import command, option, style
 
 
 @command()
+@option('-v', '--verbose', count=True, help="Show more output")
 @option('-p', '--prod', is_flag=True, help="Install to https://upload.pypi.org/legacy/")
-def main(prod):
+def main(prod, verbose):
     """Installs to https://test.pypi.org/legacy/ unless --prod is
     specified
     """
+    verbose = max(int(verbose or 0), 0)
     repo_path = Path(__file__).absolute().parent.parent
     venv_path = os.path.join(os.getenv('HOME'), '.virtualenvs', repo_path.name + '-pypi-upload')
     # determine git branch
     cmd = shlex.split('git rev-parse --abbrev-ref HEAD')
     branch = subprocess.check_output(cmd, cwd=str(repo_path)).strip().decode('utf-8')
     if prod and branch != 'master':
-        echo(style(f'ERROR: Production can only be pushed from the master branch', fg='red'), file=sys.stderr)
+        support.echo(style(f'ERROR: Production can only be pushed from the master branch', fg='red'), file=sys.stderr)
         sys.tracebacklimit = 0
         sys.exit(1)
 
-    setup_venv(venv_path, repo_path)
-    create_distribution(venv_path)
-    run_tests(venv_path)
-    upload_distribution(venv_path, repo_path, prod)
-    cleanup(venv_path, repo_path)
+    setup_venv(venv_path, repo_path, verbose=verbose - 1)
+    create_distribution(venv_path, verbose=verbose - 1)
+    run_tests(venv_path, verbose=verbose - 1)
+    upload_distribution(venv_path, repo_path, prod, verbose=verbose - 1)
+    cleanup(venv_path, repo_path, verbose=verbose - 1)
 
 
-def cleanup(venv_path, repo_path):
+def cleanup(venv_path, repo_path, verbose=None):
     """Removes venv and build artifacts
 
     Args:
         venv_path (str): path to virtual environment
         repo_path (str): path to top of repository
+        verbose (int): verbosity level
     """
+    verbose = max(int(verbose or 0), 0)
     repo_path = Path(repo_path)
-    api.remove(venv_path)
+    api.remove(venv_path, verbose=verbose - 1)
 
     artifacts = ['build', 'dist']
     for artifact in artifacts:
         path = repo_path.joinpath(artifact)
         if path.exists():
+            support.echo(f'Removing: {style(str(path), fg="red")}', verbose=verbose)
             shutil.rmtree(str(path))
 
 
-def create_distribution(venv_path):
+def create_distribution(venv_path, verbose=None):
     """Installs package into virtual environment and installs necessary
     packages for upload to public pypi
 
     Args:
         venv_path (str): path to virtual environment
+        verbose (int): verbosity level
     """
-    api.create(venv_path)
-    api.enter(venv_path, 'python setup.py sdist')
+    verbose = max(int(verbose or 0), 0)
+    api.create(venv_path, verbose=verbose - 1)
+    api.enter(venv_path, 'python setup.py sdist', verbose=verbose - 1)
 
 
-def find_matched_gpg(repo_path):
+def find_matched_gpg(repo_path, verbose=None):
+    verbose = max(int(verbose or 0), 0)
     repo_path = Path(repo_path)
     # find distribution path
     dist_path = str(repo_path.joinpath('dist'))
@@ -75,14 +84,16 @@ def find_matched_gpg(repo_path):
                 return str(dist_file_path), str(matched_gpg)
 
 
-def setup_venv(venv_path, repo_path):
+def setup_venv(venv_path, repo_path, verbose=None):
     """Installs package into virtual environment and installs necessary
     packages for upload to public pypi
 
     Args:
         venv_path (str): path to virtual environment
         repo_path (str): path to top of repository
+        verbose (int): verbosity level
     """
+    verbose = max(int(verbose or 0), 0)
     repo_path = Path(repo_path)
     artifacts = ['build', 'dist', 'vsh.egg-info']
     for artifact in artifacts:
@@ -90,26 +101,36 @@ def setup_venv(venv_path, repo_path):
         if path.exists():
             shutil.rmtree(str(path))
 
-    api.enter(venv_path, f'pip install {repo_path}[pypi]')
-    api.enter(venv_path, f'pip install {repo_path}')
+    commands = [
+        f'pip install -e {repo_path}[pypi]',
+        f'pip install -e {repo_path}',
+        ]
+    for command in commands:
+        api.enter(venv_path, command, verbose=verbose - 1)
+    print('done')
 
 
-def run_tests(venv_path):
+def run_tests(venv_path, verbose=None):
     """Runs tests"""
-    exit_code = api.enter(venv_path, 'pytest --cache-clear')
+    verbose = max(int(verbose or 0), 0)
+    command = "pytest --cache-clear"
+    exit_code = api.enter(venv_path, command, verbose=verbose - 1)
     if exit_code != 0:
-        echo(style(f'ERROR: Tests failed.', fg='red'), file=sys.stderr)
+        support.echo(style(f'ERROR: Tests failed.', fg='red'), file=sys.stderr)
         sys.tracebacklimit = 0
         sys.exit(1)
 
 
-def upload_distribution(venv_path, repo_path, prod):
+def upload_distribution(venv_path, repo_path, prod, verbose=None):
     """Uploads distribution to pypi server
 
     Args:
         venv_path (str): path to virtual environment
         repo_path (str): path to top of repository
+        prod (bool): upload to production pypi server
+        verbose (int): verbosity level
     """
+    verbose = max(int(verbose or 0), 0)
     found = find_matched_gpg(repo_path)
     if found:
         dist_file_path, matched_gpg = found
@@ -119,9 +140,9 @@ def upload_distribution(venv_path, repo_path, prod):
         if prod:
             upload_args = '-r pypi'
         command = f'twine upload {upload_args} -s {dist_file_path}.tar.gz'
-        exit_code =api.enter(venv_path, command)
+        exit_code = api.enter(venv_path, command, verbose=verbose - 1)
         if exit_code != 0:
-            echo(style(f'ERROR: Could not upload', fg='red'), file=sys.stderr)
+            support.echo(style(f'ERROR: Could not upload', fg='red'), file=sys.stderr)
             sys.tracebacklimit = 0
             sys.exit(1)
 

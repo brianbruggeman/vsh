@@ -40,7 +40,7 @@ from .termui import (clear, confirm, echo_via_pager, edit, get_terminal_size,
                      unstyle)
 
 # Types
-from .types import (BOOL, FLOAT, INT, STRING, UNPROCESSED, UUID, Choice, File,
+from .types import (BOOL, FLOAT, INT, STRING, UNPROCESSED, UUID, Choice, OptionalChoice, File,
                     IntRange, ParamType, Path, Tuple)
 
 # Utilities

@@ -14,11 +14,12 @@ import shutil
 import sys
 from pathlib import Path
 
+from setuptools import Command, setup
+
 try:
     import pip._internal.req as req
 except ImportError:
     import pip.req as req
-from setuptools import Command, setup
 
 try:
     import pypandoc

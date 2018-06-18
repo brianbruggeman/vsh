@@ -8,53 +8,12 @@ from .. import api
 from .click import api as click
 
 
-def find_existing_venv_names():
-    home = os.getenv('HOME')
-    workon_home = os.getenv('WORKON_HOME')
-    venvs_home = None
-    if workon_home and Path(workon_home).exists():
-        venvs_home = Path(workon_home)
-    elif home and (Path(home) / '.virtualenvs').exists():
-        venvs_home = Path(home) / '.virtualenvs'
-
-    if venvs_home and venvs_home.exists():
-        standard_path = ['include', 'lib', 'bin']
-        for path in os.scandir(venvs_home):
-            if Path(path).is_dir():
-                if Path(path).stem.startswith('-'):
-                    continue
-                if Path(path).stem not in standard_path:
-                   yield Path(path).stem
-
-
 default_help = """
-\b
-To create and enter a new virtual environment:
-    vsh <venv_name>
-
-\b
-To remove a previously created environment:
-    vsh -r <venv_name>
-
-\b
-To create and enter an ephemeral environment:
-    vsh -e <venv_name>
-
-\b
-To create a new ephemeral virtual environment, "e-venv", with Python 3.7 and no symlinks:
-    vsh -ceP 3.7 e-venv
-
-\b
-To run a command:
-    vsh <venv_name> <command>
-\b
-    For example: vsh <venv_name> env | sort | grep VSH
-   
 \b 
 Available Virtual Environments:
     {envs}
 
-""".format(envs="\n    ".join(f'{name:<12}' for name in sorted(find_existing_venv_names())))
+""".format(envs="\n    ".join(f'{name:<12}' for name in sorted(api.find_existing_venv_names())))
 
 
 @click.command(help=default_help, context_settings={'ignore_unknown_options': True, 'allow_interspersed_args': False})
@@ -73,7 +32,7 @@ Available Virtual Environments:
 @click.option('-v', '--verbose', count=True, help='More output')
 @click.option('-V', '--version', is_flag=True, help='Show version and exit')
 @click.option('--shell-completion', is_flag=True, help='Show shell completion code')
-@click.argument('name', metavar='VENV_NAME', required=False)
+@click.argument('name', metavar='VENV_NAME', type=click.OptionalChoice(api.find_existing_venv_names()), nargs=1, required=False)
 @click.argument('command', required=False, nargs=-1)
 @click.pass_context
 def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, shell_completion, ls, no_pip, overwrite, path, python, remove, upgrade, verbose, version, name, command):
@@ -114,6 +73,10 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, interactive, shell_completio
         command = os.getenv('SHELL')
 
     if exists and upgrade:
+        # TODO: Add this
+        #       Use pip freeze to capture everything installed currently
+        #       Modify the python used
+        #       Use pip and freeze list to rebuild virtual env with new python
         pass
 
     elif not exists and not remove:

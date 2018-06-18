@@ -16,5 +16,9 @@ VERSIONS
   - git rev-parse --show-toplevel
   - $HOME
   - /usr/local/etc/vshrc
+  - $WORKON_HOME/$VIRTUALENV_NAME
 
   `.vshrc` may be a folder or a file.  If it's a folder, there's no guarantee for which file will be executed first.
+
+  Additionally, a .vshrc will be added to the virtual environment on creation.  This file will include a change
+  directory to where vsh was first invoked.  This can be modified by updating the created file.

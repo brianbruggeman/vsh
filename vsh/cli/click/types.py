@@ -162,6 +162,30 @@ class Choice(ParamType):
         return 'Choice(%r)' % list(self.choices)
 
 
+class OptionalChoice(Choice):
+    """The choice type allows a value to be checked against a fixed set of
+    supported values.  All of these values have to be strings.
+
+    See :ref:`choice-opts` for an example.
+    """
+    name = 'choice'
+
+    def convert(self, value, param, ctx):
+        # Exact match
+        if value in self.choices:
+            return value
+
+        # Match through normalization
+        if ctx is not None and \
+           ctx.token_normalize_func is not None:
+            value = ctx.token_normalize_func(value)
+            for choice in self.choices:
+                if ctx.token_normalize_func(choice) == value:
+                    return choice
+
+        return value
+
+
 class IntParamType(ParamType):
     name = 'integer'
 
