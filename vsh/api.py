@@ -205,7 +205,8 @@ def enter(path, command=None, verbose=None):
     support.echo(click.style(f'Running command in "', fg='blue') + venv_name + click.style(f'": ', fg='blue') + cmd_display, verbose=max(verbose - 1, 0))
 
     # Activate and run
-    return_code = subprocess.run(command, shell=True, env=env, universal_newlines=True)
+    completed_process = subprocess.run(command, shell=True, env=env, universal_newlines=True)
+    return_code = completed_process.returncode
     rc_color = 'green' if return_code == 0 else 'red'
     rc = click.style(str(return_code), fg=rc_color)
     support.echo(click.style('Command return code: ', fg='blue') + rc, verbose=verbose)
