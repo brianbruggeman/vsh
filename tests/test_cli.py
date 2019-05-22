@@ -1,5 +1,6 @@
 import os
 import shlex
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,18 +9,30 @@ import pytest
 @pytest.mark.unit
 @pytest.mark.parametrize('command, expected, exit_code', [
     ('vsh --help', {}, 0),
+    ('vsh -l', {'show_envs': 1}, 0),
+    ('vsh --list', {'show_envs': 1}, 0),
+    ('vsh -C test-vsh-cli', {'create': 1}, 0),
     ('vsh test-vsh-cli echo "hi"', {'create': 1, 'enter': 1}, 0),
     ('vsh -r test-vsh-cli', {'remove': 1}, 0),
     ('vsh -e --path ~/tmp/test-vsh-cli env', {'create': 1, 'enter': 1, 'remove': 1}, 0),
     ('vsh --version', {'show_version': 1}, 0),
     ('vsh --no-pip test-vsh-cli env', {'create': 1, 'enter': 1}, 0),
-    ('vsh --ls', {'show_envs': 1}, 0),
     ('vsh', {}, 1),
     ('vsh -C tmp-venv', {'create': 1}, 0),
     ])
 def test_vsh_cli(tmpdir, mocked_api, command, expected, click_runner, exit_code):
     """Tests `vsh` command-line interface"""
     from vsh.cli.vsh import vsh
+
+    pre_exists = set()
+    for root, folders, files in os.walk(tmpdir):
+        rel_root = Path(root).relative_to(tmpdir)
+        for folder_name in folders:
+            folder_path = rel_root / folder_name
+            pre_exists.add(folder_path)
+        for file_name in files:
+            file_path = rel_root / file_name
+            pre_exists.add(file_path)
 
     os.environ['WORKON_HOME'] = str(tmpdir)
 
@@ -30,6 +43,22 @@ def test_vsh_cli(tmpdir, mocked_api, command, expected, click_runner, exit_code)
 
     called = {k: v.call_count for k, v in mocked_api.items() if v.call_count != 0}
     assert called == expected
+
+    added = set()
+    for root, folders, files in os.walk(tmpdir):
+        rel_root = Path(root).relative_to(tmpdir)
+        for folder_name in folders:
+            folder_path = rel_root / folder_name
+            if folder_path not in pre_exists:
+                added.add(folder_path)
+        for file_name in files:
+            file_path = rel_root / file_name
+            if file_path not in pre_exists:
+                added.add(file_path)
+
+    for path in added:
+        breakpoint()
+
 
 
 @pytest.mark.unit
@@ -51,7 +80,7 @@ def test_vsh_cli_multi_command(tmpdir, click_runner, mocked_api, venv_path):
         api.validate_environment = MagicMock(return_value=exists)
 
         result = click_runner.invoke(vsh, command)
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
 
     expected = {'create': 1, 'enter': 2}
 

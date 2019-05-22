@@ -15,7 +15,7 @@ import zlib
 import time
 import ctypes
 import msvcrt
-from click._compat import _NonClosingTextIOWrapper, text_type, PY2
+from ._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, c_int, c_char, c_char_p, \
      c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
 try:
@@ -261,7 +261,7 @@ def _get_windows_console_stream(f, encoding, errors):
         func = _stream_factories.get(f.fileno())
         if func is not None:
             if not PY2:
-                f = getattr(f, 'buffer')
+                f = getattr(f, 'buffer', None)
                 if f is None:
                     return None
             else:

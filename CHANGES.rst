@@ -3,6 +3,30 @@ VERSIONS
 ========
 
 
+0.7.0
+-----
+- Adds support for starting path
+- Adds support for ignoring a starting path
+
+- Adds `vsh.cfg` support
+
+  * `vsh.cfg` is a `TOML` file that provides a way to more finely control things like:
+
+     + startup folder
+     + environment variables
+
+  * the logic for `vsh.cfg` discovery and `.vshrc` is the same
+
+- Adds Windows support
+
+  * Support is preliminary
+
+     + general pip install doesn't always work on Windows (Errno 13)
+     + recommended pip install is using pip's `--user` option
+     + When using pip's `--user` option, the windows `PATH` must be updated
+
+- Small performance enhancements
+
 0.6.1
 -----
 

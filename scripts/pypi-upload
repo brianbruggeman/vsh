@@ -1,76 +1,68 @@
 #!/usr/bin/env python
 import os
-import shlex
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Tuple
 
 from vsh import api
-from vsh.cli import support
-from vsh.cli.click.api import command, option, style
+from vsh.vendored.click import command, echo, option, style
 
 
 @command()
-@option('-v', '--verbose', count=True, help="Show more output")
+@option('-i', '--interactive', is_flag=True, help="Run interactively")
 @option('-p', '--prod', is_flag=True, help="Install to https://upload.pypi.org/legacy/")
-def main(prod, verbose):
+def main(interactive: bool, prod: bool):
     """Installs to https://test.pypi.org/legacy/ unless --prod is
     specified
     """
-    verbose = max(int(verbose or 0), 0)
     repo_path = Path(__file__).absolute().parent.parent
-    venv_path = os.path.join(os.getenv('HOME'), '.virtualenvs', repo_path.name + '-pypi-upload')
+    venv_path = Path.home() / '.virtualenvs' / f'{repo_path.name}-pypi-upload'
+
     # determine git branch
-    cmd = shlex.split('git rev-parse --abbrev-ref HEAD')
+    cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
     branch = subprocess.check_output(cmd, cwd=str(repo_path)).strip().decode('utf-8')
     if prod and branch != 'master':
-        support.echo(style(f'ERROR: Production can only be pushed from the master branch', fg='red'), file=sys.stderr)
+        echo(style(f'ERROR: Production can only be pushed from the master branch', fg='red'), file=sys.stderr)
         sys.tracebacklimit = 0
         sys.exit(1)
 
-    setup_venv(venv_path, repo_path, verbose=verbose - 1)
-    create_distribution(venv_path, verbose=verbose - 1)
-    run_tests(venv_path, verbose=verbose - 1)
-    upload_distribution(venv_path, repo_path, prod, verbose=verbose - 1)
-    cleanup(venv_path, repo_path, verbose=verbose - 1)
+    setup_venv(venv_path, repo_path)
+    create_distribution(venv_path)
+    run_tests(venv_path)
+    upload_distribution(venv_path, repo_path, prod)
+    cleanup(venv_path, repo_path)
 
 
-def cleanup(venv_path, repo_path, verbose=None):
-    """Removes venv and build artifacts
+def cleanup(venv_path: Path, repo_path: Path):
+    """Removes venv and build artifacts within repository
 
     Args:
-        venv_path (str): path to virtual environment
-        repo_path (str): path to top of repository
-        verbose (int): verbosity level
+        venv_path: path to virtual environment
+        repo_path: path to top of repository
     """
-    verbose = max(int(verbose or 0), 0)
-    repo_path = Path(repo_path)
-    api.remove(venv_path, verbose=verbose - 1)
+    api.remove(venv_path)
 
     artifacts = ['build', 'dist']
     for artifact in artifacts:
         path = repo_path.joinpath(artifact)
         if path.exists():
-            support.echo(f'Removing: {style(str(path), fg="red")}', verbose=verbose)
             shutil.rmtree(str(path))
 
 
-def create_distribution(venv_path, verbose=None):
+def create_distribution(venv_path: Path):
     """Installs package into virtual environment and installs necessary
     packages for upload to public pypi
 
     Args:
         venv_path (str): path to virtual environment
-        verbose (int): verbosity level
     """
-    verbose = max(int(verbose or 0), 0)
-    api.create(venv_path, verbose=verbose - 1)
-    api.enter(venv_path, 'python setup.py sdist', verbose=verbose - 1)
+    api.create(venv_path)
+    api.enter(venv_path, 'python setup.py sdist')
 
 
-def find_matched_gpg(repo_path, verbose=None):
-    verbose = max(int(verbose or 0), 0)
+def find_matched_gpg(repo_path: Path) -> Tuple[Path, Path]:
     repo_path = Path(repo_path)
     # find distribution path
     dist_path = str(repo_path.joinpath('dist'))
@@ -81,19 +73,17 @@ def find_matched_gpg(repo_path, verbose=None):
             if filename.endswith('.tar.gz'):
                 dist_file_path = Path(os.path.join(root, filename.replace('.tar.gz', '')))
                 matched_gpg = Path(str(dist_file_path) + '.asc')
-                return str(dist_file_path), str(matched_gpg)
+                return dist_file_path, matched_gpg
 
 
-def setup_venv(venv_path, repo_path, verbose=None):
+def setup_venv(venv_path: Path, repo_path: Path):
     """Installs package into virtual environment and installs necessary
     packages for upload to public pypi
 
     Args:
         venv_path (str): path to virtual environment
         repo_path (str): path to top of repository
-        verbose (int): verbosity level
     """
-    verbose = max(int(verbose or 0), 0)
     repo_path = Path(repo_path)
     artifacts = ['build', 'dist', 'vsh.egg-info']
     for artifact in artifacts:
@@ -101,48 +91,36 @@ def setup_venv(venv_path, repo_path, verbose=None):
         if path.exists():
             shutil.rmtree(str(path))
 
-    commands = [
-        f'pip install -e {repo_path}[pypi]',
-        f'pip install -e {repo_path}',
-        ]
-    for command in commands:
-        api.enter(venv_path, command, verbose=verbose - 1)
-    print('done')
+    api.enter(venv_path, f'pip install {repo_path}[pypi]')
+    api.enter(venv_path, f'pip install {repo_path}')
 
 
-def run_tests(venv_path, verbose=None):
+def run_tests(venv_path: Path):
     """Runs tests"""
-    verbose = max(int(verbose or 0), 0)
-    command = "pytest --cache-clear"
-    exit_code = api.enter(venv_path, command, verbose=verbose - 1)
+    exit_code = api.enter(venv_path, 'pytest --cache-clear')
     if exit_code != 0:
-        support.echo(style(f'ERROR: Tests failed.', fg='red'), file=sys.stderr)
+        echo(style(f'ERROR: Tests failed.', fg='red'), file=sys.stderr)
         sys.tracebacklimit = 0
         sys.exit(1)
 
 
-def upload_distribution(venv_path, repo_path, prod, verbose=None):
+def upload_distribution(venv_path: Path, repo_path: Path, prod: bool = False):
     """Uploads distribution to pypi server
 
     Args:
         venv_path (str): path to virtual environment
         repo_path (str): path to top of repository
-        prod (bool): upload to production pypi server
-        verbose (int): verbosity level
     """
-    verbose = max(int(verbose or 0), 0)
     found = find_matched_gpg(repo_path)
     if found:
         dist_file_path, matched_gpg = found
-        if os.path.exists(matched_gpg):
-            os.remove(matched_gpg)
-        upload_args = '-r pypi-test'
-        if prod:
-            upload_args = '-r pypi'
+        if matched_gpg.exists():
+            matched_gpg.unlink()
+        upload_args = '-r pypi' if prod else '-r pypi-test'
         command = f'twine upload {upload_args} -s {dist_file_path}.tar.gz'
-        exit_code = api.enter(venv_path, command, verbose=verbose - 1)
+        exit_code =api.enter(venv_path, command)
         if exit_code != 0:
-            support.echo(style(f'ERROR: Could not upload', fg='red'), file=sys.stderr)
+            echo(style(f'ERROR: Could not upload', fg='red'), file=sys.stderr)
             sys.tracebacklimit = 0
             sys.exit(1)
 

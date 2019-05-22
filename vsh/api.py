@@ -1,253 +1,191 @@
-import itertools
 import os
 import re
 import shlex
 import shutil
 import subprocess
 import sys
-import types
-import venv
 from pathlib import Path
+from typing import Dict, Iterable, Optional, Set, Tuple
 
 from .__metadata__ import package_metadata
-from .cli import support
-from .cli.click import api as click
-from .errors import InterpreterNotFound, InvalidEnvironmentError, PathNotFoundError
+from . import terminal
+from .builder import VenvBuilder
+from .vsh_config import VshConfig, WORKON_HOME
+from .vendored import click
+from .errors import InterpreterNotFound, InvalidEnvironmentError, PathNotFoundError, VenvConfigNotFound, VenvNameError
 
 __all__ = ('create', 'enter', 'remove', 'show_envs', 'show_version')
 
 
-class VenvBuilder(venv.EnvBuilder):
-
-    def create(self, env_dir, executable=None):
-        """
-        Create a virtual environment in a directory.
-
-        Args:
-            env_dir (str): The target directory to create an environment in.
-            executable (str, optional): path to python interpreter executable [default: sys.executable]
-        """
-        env_dir = os.path.abspath(env_dir)
-        context = self.ensure_directories(env_dir=env_dir, executable=executable)
-        # See issue 24875. We need system_site_packages to be False
-        # until after pip is installed.
-        true_system_site_packages = self.system_site_packages
-        self.system_site_packages = False
-        self.create_configuration(context)
-        self.setup_python(context)
-        if self.with_pip:
-            self._setup_pip(context)
-        if not self.upgrade:
-            self.setup_scripts(context)
-            self.post_setup(context)
-        if true_system_site_packages:
-            # We had set it to False before, now
-            # restore it and rewrite the configuration
-            self.system_site_packages = True
-        self.create_configuration(context)
-
-    def ensure_directories(self, env_dir, executable=None):
-        """
-        Create the directories for the environment.
-        Returns a context object which holds paths in the environment,
-        for use by subsequent logic.
-
-        Args:
-            env_dir (str): path to environment
-            executable (str, optional): path to python interpreter executable [default: sys.executable]
-
-        Returns:
-            types.SimpleNamespace: context
-        """
-        env_dir = Path(env_dir)
-
-        def create_if_needed(d):
-            d = Path(d)
-            if d and not d.exists():
-                d.mkdir(parents=True, exist_ok=True)
-            if not d or not d.is_dir():
-                raise ValueError(f'Unable to create directory {d!r}')
-
-        executable = executable or sys.executable
-        if env_dir.exists() and self.clear:
-            self.clear_directory(env_dir)
-        context = types.SimpleNamespace()
-        context.env_dir = str(env_dir)
-        context.env_name = env_dir.stem
-        prompt = self.prompt if self.prompt is not None else context.env_name
-        context.prompt = f'({prompt}) '
-        create_if_needed(env_dir)
-        dirname, exename = os.path.split(os.path.abspath(executable))
-        context.executable = executable
-        context.python_dir = dirname
-        context.python_exe = exename
-        if sys.platform == 'win32':
-            binname = 'Scripts'
-            incpath = 'Include'
-            libpath = env_dir / 'Lib' / 'site-packages'
-        else:
-            binname = 'bin'
-            incpath = 'include'
-            libpath = env_dir / 'lib' / exename / 'site-packages'
-        path = env_dir / incpath
-        context.inc_path = str(path)
-        create_if_needed(path)
-        create_if_needed(libpath)
-        # Issue 21197: create lib64 as a symlink to lib on 64-bit non-OS X POSIX
-        if (sys.maxsize > 2**32) and (os.name == 'posix') and (sys.platform != 'darwin'):
-            link_path = os.path.join(env_dir, 'lib64')
-            if not os.path.exists(link_path):   # Issue #21643
-                os.symlink('lib', link_path)
-        binpath = env_dir / binname
-        context.bin_path = str(binpath)
-        context.bin_name = binname
-        context.env_exe = str(binpath / exename)
-        create_if_needed(binpath)
-        return context
-
-    def _setup_pip(self, context):
-        """Installs or upgrades pip in a virtual environment"""
-        # We run ensurepip in isolated mode to avoid side effects from
-        # environment vars, the current directory and anything else
-        # intended for the global Python environment
-        # Originally -Im, but -Esm works on both python2 and python3
-        cmd = [context.env_exe, '-Esm', 'ensurepip', '--upgrade',
-                                                     '--default-pip']
-        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-
-
-def build_vsh_config_file(venv_path, startup_path=None):
+def build_vsh_rc_file(venv_path: Path, working: Optional[Path] = None) -> Path:
     """Sets a default configuration.
 
     When the virtual environment is started, this particular file will
-    set the current working folder to startup_path.
+    set the current working folder to working.
 
     Args:
-        venv_path (str|Path): path to virtual environment
-        startup_path (str|Path): path to startup folder
+        venv_path: path to virtual environment
+        working: path to startup folder
+
+    Returns:
+        path to created vshrc file
     """
-    default_startup_path = Path('.')
-    startup_path = Path(startup_path or default_startup_path)
+    default_working_path = Path('.')
+    working = Path(working or default_working_path)
     vsh_venv_config_path = venv_path / '.vshrc'
     if vsh_venv_config_path.parent.exists() and not vsh_venv_config_path.exists():
-        if startup_path.exists() and startup_path.is_dir():
+        if working.exists() and working.is_dir():
             with vsh_venv_config_path.open('w') as config:
-                config.write(f'cd {startup_path.absolute()}\n')
-            support.echo(f'Set default path to: {click.style(str(startup_path), fg="blue")}')
-            support.echo(f'To edit, update: {click.style(str(vsh_venv_config_path), fg="yellow")}')
+                config.write(f'cd {working.absolute()}\n')
+            terminal.echo(f'Set default path to: {f"{terminal.blue(str(working))}"}')
+            terminal.echo(f'To edit, update: {terminal.yellow(str(vsh_venv_config_path))}')
+    return vsh_venv_config_path
 
 
-def create(path, site_packages=None, overwrite=None, symlinks=None, upgrade=None, include_pip=None, prompt=None, python=None, verbose=None, interactive=None, dry_run=None):
+def create(path: Path, site_packages: bool = False, overwrite: bool = False, symlinks: bool = False, upgrade: bool = False, include_pip: bool = False, prompt: str = '', python: str = '', verbose: int = 0, interactive: bool = False, dry_run: bool = False, working: Optional[Path] = None) -> Path:
     """Creates a virtual environment
 
     Notes: Wraps venv
 
     Args:
-        path (str): path to virtual environment
+        path: path to virtual environment
 
-        site_packages (bool, optional): use system packages within environment [default: False]
-        overwrite (bool, optional): replace target folder [default: False]
-        symlinks (bool, optional): create symbolic link to Python executable [default: True]
-        upgrade (bool, optional): Upgrades existing environment with new Python executable [default: False]
-        include_pip (bool, optional): Includes pip within virtualenv [default: True]
-        prompt (str, optional): Modifies prompt
-        python (str, optional): Version of python, python executable or path to python
+        site_packages: use system packages within environment [default: False]
+        overwrite: replace target folder [default: False]
+        symlinks: create symbolic link to Python executable [default: True]
+        upgrade: Upgrades existing environment with new Python executable [default: False]
+        include_pip: Includes pip within virtualenv [default: True]
+        prompt: Modifies prompt
+        python: Version of python, python executable or path to python
+        working: working path
 
-        verbose (int, optional): more output [default: 0]
-        interactive (bool, optional): ask before updating system [default: False]
-        dry_run (bool, optional): do not update system
+        verbose: more output [default: 0]
+        interactive: ask before updating system [default: False]
+        dry_run: do not update system
 
     Returns:
         str: path to venv
     """
     verbose = max(int(verbose or 0), 0)
-    path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
-    name = os.path.basename(path)
+    path = path.expanduser().resolve().absolute()
+    name = path.name
     builder = _get_builder(path=path, site_packages=site_packages, overwrite=overwrite, symlinks=symlinks, upgrade=upgrade, include_pip=include_pip, prompt=prompt)
-    prompt = f'Create virtual environment "{name}" under: {path}?'
-    run_command = click.confirm(prompt) if interactive else True
+    interactive_prompt = f'Create virtual environment "{terminal.yellow(name)}" under: {terminal.green(path)}?'
+    run_command = click.confirm(interactive_prompt) if interactive else True
     if run_command:
         if not dry_run:
             executable = _get_interpreter(python)
             if not executable:
                 raise InterpreterNotFound(version=python)
-            builder.create(env_dir=path, executable=executable)
-        support.echo('Created virtual environment "' + click.style(name, fg='yellow') + " under: " + click.style(path, fg='green'), verbose=verbose)
+            builder.create(env_dir=str(path), executable=str(executable))
+            create_vsh_config(name=name, path=path, working=working)
+        terminal.echo(f'Created virtual environment "{terminal.yellow(name)}" under: {terminal.green(path)}', verbose=verbose)
     return path
 
 
-def enter(path, command=None, verbose=None):
+def create_vsh_config(name: str, path: Path, working: Optional[Path] = None, vsh_config_path: Optional[Path] = None) -> VshConfig:
+    """Creates a vsh virtual environment configuration file
+
+    Args:
+        name: name of virtual environment
+        path: path to virtual environment
+        working: path of working dir when entering virtual environment
+        vsh_config_path: path to vsh configuration file
+
+    Returns:
+        configuration created
+    """
+    config_file_path = find_vsh_config(name=name, check=False)
+    config_file_path.parent.mkdir(parents=True, exist_ok=True)
+    config = VshConfig(
+        venv_name=name,
+        venv_path=path,
+        working_path=working,
+        vsh_config_path=vsh_config_path,
+        )
+    config.dump(config.vsh_config_path)
+    return config
+
+
+def enter(path: Path, command: Optional[Iterable[str]] = None, verbose: int = 0, working: Optional[Path] = None, ignore_working: bool = False) -> int:
     """Enters a virtual environment
 
     Args:
-        path (str): path to virtual environment
-        command (tuple|list|str, optional): command to run in virtual env [default: shell]
-        verbose (int, optional): Adds more information to stdout
+        path:  path to virtual environment
+        command: command to run in virtual env [default: shell]
+        verbose: Adds more information to stdout
+        working: Working folder path
+
+    Returns:
+        return code for command run
     """
+    path = path.expanduser().resolve().absolute()
+    vsh_config_path = find_vsh_config(name=path.name, check=False)
+    if not vsh_config_path.exists():
+        config = create_vsh_config(name=path.name, path=path, working=working, vsh_config_path=vsh_config_path)
+    else:
+        config = read_vsh_config(path=vsh_config_path)
+    if working and working != config.working_path:
+        config.working_path = Path(working)
+        config.dump(vsh_config_path)
     verbose = max(int(verbose or 0), 0)
-    path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
-    shell = os.getenv("SHELL")
-    command = command or shell
-    env = _update_environment(path)
-    venv_name = click.style(Path(path).name, fg='green')
-
+    env = _update_environment(config=config)
     # Setup the environment scripts
-    vshell_config_commands = '; '.join(f'. {filepath}' for filepath in find_vsh_config_files(path))
-    if not isinstance(command, str):
-        command = " ".join(command)
-    if vshell_config_commands:
-        command = f'{vshell_config_commands}; {command}'
-    cmd_display = click.style(command, fg='green')
-    interactive = '-i' if is_tty() else ''
-    if Path(shell).name in ['bash', 'zsh']:
-        command = f'{shell} {interactive} -c \"{command}\"'
-        cmd_display = f'{shell} {interactive} -c \"{cmd_display}\"'
-
-    support.echo(click.style(f'Running command in "', fg='blue') + venv_name + click.style(f'": ', fg='blue') + cmd_display, verbose=max(verbose - 1, 0))
-
-    # Activate and run
-    completed_process = subprocess.run(command, shell=True, env=env, universal_newlines=True)
-    return_code = completed_process.returncode
-    rc_color = 'green' if return_code == 0 else 'red'
-    rc = click.style(str(return_code), fg=rc_color)
-    support.echo(click.style('Command return code: ', fg='blue') + rc, verbose=verbose)
-    return return_code
+    working = working or config.working_path
+    cwd = Path.cwd() if ignore_working else Path(working or Path.cwd())
+    # This should work for all POSIX environments as well as Powershell
+    source = '.'
+    commands = []
+    for vshrc_path in find_vsh_rc_files(config.venv_path):
+        vshrc_command = f'{source} {vshrc_path}'
+        commands.append(vshrc_command)
+    if isinstance(command, (list, tuple)):
+        command = ' '.join(command)
+    commands.append(f'{command}')
+    interactive = '-i' if sys.stdout.isatty() else ''
+    shelled_command = f'{config.shell_path} {interactive} -c \"{"; ".join(commands)}\"'
+    terminal.echo(f'Running in {terminal.blue(config.venv_name)}: {terminal.green(shelled_command)}', verbose=verbose)
+    proc = subprocess.run(shlex.split(shelled_command), cwd=cwd, env=env)
+    terminal.echo(f'Command return code: {terminal.green(str(proc.returncode)) if proc.returncode == 0 else terminal.red(str(proc.returncode))}', verbose=verbose)
+    return proc.returncode
 
 
-def is_tty():
-    cp = subprocess.run(['tty', '-s'])
-    return cp.returncode == 0
+def find_vsh_rc_files(venv_path: Path) -> Iterable[Path]:
+    """Find the vsh configuration files
 
+    Args:
+        venv_path: path to virtual environment
 
-def find_vsh_config_files(venv_path=None):
+    Yields:
+        vshrc paths found
+    """
+    path_sequence = [
+        '/usr/local/etc/vsh',
+        os.getenv('HOME'),
+        '.',
+        venv_path,
+        ]
     cmds = [
         'git rev-parse --show-toplevel',
         'hg root',
         ]
     top_of_current_repo_path = None
     for cmd in cmds:
-        cmd = shlex.split(cmd)
-        try:
-            top_of_current_repo_path = Path(subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8').strip()) or None
-            if top_of_current_repo_path:
+        cmd_list = shlex.split(cmd)
+        if shutil.which(cmd_list[0]):
+            top_of_current_repo_path = Path(subprocess.run(cmd_list, stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8').strip()) or None
+            if top_of_current_repo_path and top_of_current_repo_path.exists():
+                path_sequence.append(top_of_current_repo_path)
                 break
-        except Exception:
-            pass
-    paths = [
-        Path('/usr/local/etc/vsh'),
-        Path(os.getenv('HOME')),
-        Path('.'),
-        Path(venv_path),
-        top_of_current_repo_path,
-        ]
-    memoized_paths = set()
+    # general set of paths to search for vsh configuration files
+    paths = [p for p in map(Path, [p_ for p_ in path_sequence if p_]) if p.exists() and (p / '.vshrc').exists()]
+    memoized_paths: Set[Path] = set()
     for p in paths:
-        if p is None:
-            continue
+        p = p.expanduser().resolve().absolute()
         config_path = p / '.vshrc'
-        if not config_path.exists() and str(p) == venv_path:
-            startup_path = Path(top_of_current_repo_path or '.')
-            build_vsh_config_file(p, startup_path=startup_path)
+        if not config_path.exists() and p == venv_path:
+            working = Path(top_of_current_repo_path or '.')
+            build_vsh_rc_file(p, working=working)
         if p.exists() and config_path.exists():
             if config_path.is_file():
                 if config_path in memoized_paths:
@@ -256,102 +194,206 @@ def find_vsh_config_files(venv_path=None):
                 yield config_path
             elif config_path.is_dir():
                 for root, folders, files in os.walk(str(config_path)):
-                    root = Path(root)
+                    root_path = Path(root)
                     for filename in files:
-                        filepath = (root / filename).absolute()
+                        filepath = (root_path / filename).absolute()
                         if filepath in memoized_paths:
                             continue
                         memoized_paths.add(filepath)
                         yield filepath
 
 
-def find_environment_folders(path=None):
-    path = path or os.getenv('WORKON_HOME') or os.path.join(os.getenv('HOME'), '.virtualenvs')
+def find_environment_folders(path: Optional[Path] = None) -> Iterable[Tuple[str, Path]]:
+    """Find location of the virtual environments
+
+    Args:
+        path: path to virtual environment home
+
+    Yields:
+        - name: venv name
+        - path: venv path
+
+    """
+    path = path or WORKON_HOME
     for root, directories, files in os.walk(path):
         found = []
         for index, name in enumerate(directories):
-            directory = os.path.join(root, name)
+            directory = Path(root) / name
             if not validate_environment(directory):
                 continue
             yield name, directory
             found.append(name)
-        # This makes the search "fast" by skipping out on folders
+        # This makes the search "fast" by skipping out on sub folders
         #  that do not need to be searched because they have already
         #  been identified as valid environments
         directories[:] = [d for d in directories if d not in found]
 
 
-def find_existing_venv_names(venvs_home=None):
-    home = os.getenv('HOME')
-    workon_home = os.getenv('WORKON_HOME') or Path(f'{home}/.virtualenvs')
-    venvs_home = venvs_home or Path(workon_home) if workon_home and Path(workon_home).exists() else None
+def get_venv_home(name: str, check: bool = True) -> Path:
+    """Find the virtual environment's home given a name
 
-    if venvs_home and venvs_home.exists():
-        standard_path = ['include', 'lib', 'bin']
-        for path in os.scandir(venvs_home):
-            if Path(path).is_dir():
-                if Path(path).stem not in standard_path:
-                    yield Path(path).stem
+    Args:
+        name: the name of the existing virtual environment
+        check: Raise a name error if true and name doesn't exist
+
+    Returns:
+        path: the path tot he existing virtual environment
+
+    Raises:
+        VenvNameError: when the name is not valid and check is True
+
+    """
+    default_path = WORKON_HOME
+    venv_path = default_path / name
+    if venv_path.exists() and venv_path.is_dir():
+        if validate_venv_path(venv_path, check=False):
+            return venv_path
+    elif not check:
+        return default_path / name
+    raise VenvNameError(name=name)
 
 
-def remove(path, verbose=None, interactive=None, dry_run=None, check=None):
+def find_vsh_config(name: str, check: bool = True) -> Path:
+    """Finds the vsh venv configuration file
+
+    Args:
+        name: the name of the venv
+        check: if true and vsh not found, then raises an error
+
+    Raises:
+        VenvConfigNotFound when check is True and config file is not found
+    """
+    if not name:
+        raise VenvConfigNotFound(name=name)
+    vsh_config_path = Path.home() / '.vsh' / f'{name}.cfg'
+    if check and not vsh_config_path.exists():
+        raise VenvConfigNotFound(name=name)
+    return vsh_config_path
+
+
+def read_vsh_config(path: Path) -> VshConfig:
+    """Reads vsh configuration file
+
+    Args:
+        path: path to the vsh configuration file
+
+    Returns:
+        vsh configuration
+    """
+    config = VshConfig()
+    config.load(path)
+    return config
+
+
+def remove(path: Path, verbose: int = 0, interactive: bool = False, dry_run: bool = False, check: bool = False) -> Path:
     """Remove a virtual environment
 
     Args:
-        path (str): path to virtual environment
-        verbose (int, optional): more output [default: 0]
-        interactive (bool, optional): ask before updating system [default: False]
-        dry_run (bool, optional): do not update system
-        check (bool, optional): Raises PathNotFoundError if True and path isn't found [default: False]
+        path: path to virtual environment
+        verbose: more output [default: 0]
+        interactive: ask before updating system [default: False]
+        dry_run: do not update system
+        check: Raises PathNotFoundError if True and path isn't found [default: False]
 
     Raises:
         PathNotFoundError:  when check is True and path is not found
 
     Returns:
-        str: folder path removed
+        folder path removed
     """
     verbose = max(int(verbose or 0), 0)
     check = False if check is None else check
-    path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
+    path = path.expanduser().resolve().absolute()
     if not validate_environment(path) and check is True:
         raise InvalidEnvironmentError(path=path)
-    prompt = f'Remove {path}?'
-    run_command = click.confirm(prompt) == 'y' if interactive else True
+    run_command = click.confirm(f'Remove {terminal.yellow(str(path))}?') == 'y' if interactive else True
     if run_command and not dry_run:
-        if os.path.exists(path):
+        if path.exists():
             shutil.rmtree(path)
+            remove_venv_config(name=path.name)
         elif check is True:
             raise PathNotFoundError(path=path)
-    support.echo(click.style('Removed: ', fg='blue') + click.style(path, fg='green'), verbose=(max(verbose - 1, 0) and path))
+    terminal.echo(f'{terminal.blue("Removed")}: {terminal.green(path)}', verbose=verbose)
     return path
 
 
-def show_envs(path=None):
-    path = path or os.getenv('WORKON_HOME')
-    for name, path in find_environment_folders(path=path):
-        print(f'Found {click.style(name, fg="yellow")} under: {click.style(path, fg="yellow")}')
+def remove_venv_config(name: str) -> Path:
+    """Removes a vsh virtual environment configuration file
+
+    Args:
+        name: name of virtual environment
+        path: path to virtual environment
+        working: path of working dir when entering virtual environment
+
+    Returns:
+        configuration file removed
+    """
+    config_file_path = find_vsh_config(name=name, check=False)
+    if config_file_path.exists():
+        config_file_path.unlink()
+    return config_file_path
+
+
+def show_envs(path: Optional[Path] = None):
+    """Displays available virtual environments
+
+    Args:
+        path: path to virtual environment folder
+    """
+    path = path or WORKON_HOME or Path.cwd()
+    for name, path in sorted(find_environment_folders(path=path)):
+        terminal.echo(f'Found {terminal.yellow(name)} under: {terminal.yellow(path)}')
 
 
 def show_version():
-    support.echo(f"{package_metadata['name']} {package_metadata['version']}")
+    """Displays vsh package version
+    """
+    terminal.echo(f"{package_metadata['name']} {package_metadata['version']}")
 
 
-def validate_environment(path, check=None):
-    """Validates if path is a virtual environment
+def upgrade(path: Path, site_packages=None, overwrite=None, symlinks=None, include_pip=None, prompt=None, python=None, verbose=None, interactive=None, dry_run=None, working=None) -> Path:
+    """Upgrades a virtual environment
+
+    Notes: Wraps venv
 
     Args:
-        path (str): path to virtual environment
-        check (bool, optional): Raise an error if path isn't valid
+        path: path to virtual environment
+
+        site_packages: use system packages within environment [default: False]
+        overwrite: replace target folder [default: False]
+        symlinks: create symbolic link to Python executable [default: True]
+        include_pip: Includes pip within virtualenv [default: True]
+        prompt: Modifies prompt
+        python: Version of python, python executable or path to python
+        working: working path
+
+        verbose: more output [default: 0]
+        interactive: ask before updating system [default: False]
+        dry_run: do not update system
+
+    Returns:
+        str: path to venv
+    """
+    return create(path=path, site_packages=site_packages, overwrite=overwrite, symlinks=symlinks, upgrade=True, include_pip=include_pip, prompt=prompt, python=python, verbose=verbose, interactive=interactive, dry_run=dry_run, working=working)
+
+
+def validate_environment(path: Path, check: bool = False) -> bool:
+    """Validates if path is a valid virtual environment
+
+    Args:
+        path: path to virtual environment
+        check: Raise an error if path isn't valid
 
     Raises:
         InvalidEnvironmentError: when environment is not valid
 
     Returns:
-        bool: True if valid virtual environment path
+        True if valid virtual environment path
     """
-    path = Path(path)
     valid = None
     win32 = sys.platform == 'win32'
+    validate_venv_path(path=path, check=check)
+
     # Expected structure
     structure = {
         'bin': 'Scripts' if win32 else 'bin',
@@ -382,9 +424,8 @@ def validate_environment(path, check=None):
 
         # check for python binaries
         python_name = paths['lib'].parent.name
-        python_ver_data = re.search('(?P<interpreter>python|pypy)\.?(?P<major>\d+)(\.?(?P<minor>\d+))', python_name)
-        if python_ver_data:
-            python_ver_data = python_ver_data.groupdict()
+        python_ver_match = re.search('(?P<interpreter>python|pypy)\.?(?P<major>\d+)(\.?(?P<minor>\d+))', python_name)
+        if python_ver_match:
             python_executable = paths['bin'].joinpath('python')
             python_ver_executable = paths['bin'].joinpath(python_name)
             if python_executable.exists():
@@ -396,7 +437,81 @@ def validate_environment(path, check=None):
             if check and valid is False:
                 raise InvalidEnvironmentError(f'Could not find {python_name} executable under {path}.')
 
+    return True if valid else False
+
+
+def validate_venv_path(path: Path, check: bool = False) -> bool:
+    """Validates that a given path is a path to a virtual environment
+
+    Args:
+        path: the virtual environment path to check
+        check: flag to toggle exception raising on invalid paths
+
+    Raises:
+        InvalidEnvironmentError: when check is true and path is invalid
+
+    Returns:
+        True if the path and path structure is valid
+    """
+    win32 = sys.platform == 'win32'
+    standard_struct = {
+        'bin': 'Scripts' if win32 else 'bin',
+        'include': 'Include' if win32 else 'include',
+        'lib': os.path.join('Lib', 'site-packages') if win32 else os.path.join('lib', '*', 'site-packages'),
+        }
+    standard_struct['python'] = f'{standard_struct["bin"]}/python'
+    standard_struct['site-packages'] = f'{standard_struct["lib"]}/*/site-packages'
+    valid = False
+    if path and path.exists():
+        checked = False
+        subchecked = False
+        for globbed_path in standard_struct.values():
+            checked = True
+            for resolved_path in path.glob(globbed_path):
+                if not resolved_path.exists():
+                    if check:
+                        raise InvalidEnvironmentError(f'Could not find {globbed_path} under {path}.')
+
+                    return valid
+                subchecked = True
+        valid = checked and subchecked
+    if not valid and check:
+        raise InvalidEnvironmentError(f'Invalid virtual environment path: {path}.')
     return valid
+
+
+def validate_venv_name_and_path(name: str, path: Optional[Path]) -> Tuple[str, Optional[Path]]:
+    """Validates that the name and the Path are valid
+
+    Because this is a command-line interface, often we can make mistakes.
+    This intends to catch some of the more common mistakes made when
+    using the cli.  This is not intended to verify if the path and
+    virtual environment exist.  It only checks to see if the name and
+    path follow a standard convention.
+
+    Args:
+        name: the name of the virtual environment
+        path: the path to the virtual environment
+
+    Returns:
+        name: the qualified name of the virtual environment
+        path: the qualified path of the virtual environment
+
+    """
+    # Cuts down on improper vsh invocations where options are used in
+    #  incorrect positions
+    assert not name.startswith('-'), 'Virtual environment names may not start with "-"'
+    assert ' ' not in name, 'Virtual environment names may not include spaces'
+    if '/' in name and not path:
+        path = Path(name).expanduser().resolve().absolute()
+        name = path.name
+    if name and not path:
+        path = get_venv_home(name, check=False)
+    # if name and path:
+    #     validate_venv_path(path=path, check=True)
+    # elif name and not path:
+    #     path = get_venv_home(name, check=False)
+    return name, path
 
 
 # ----------------------------------------------------------------------
@@ -422,9 +537,9 @@ def _escape_zero_length_codes(prompt=None):
     return prompt
 
 
-def _get_builder(path, site_packages=None, overwrite=None, symlinks=None, upgrade=None, include_pip=None, prompt=None):
-    path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
-    name = os.path.basename(path)
+def _get_builder(path: Path, site_packages=None, overwrite=None, symlinks=None, upgrade=None, include_pip=None, prompt=None):
+    path = path.expanduser().resolve().absolute()
+    name = path.name
     builder = VenvBuilder(
         system_site_packages=False if site_packages is None else site_packages,
         clear=False if overwrite is None else overwrite,
@@ -436,17 +551,17 @@ def _get_builder(path, site_packages=None, overwrite=None, symlinks=None, upgrad
     return builder
 
 
-def _get_interpreter(python=None):
+def _get_interpreter(python=None) -> Path:
     """Returns the interpreter given the string"""
-    if python is None:
-        return sys.executable
+    if not python:
+        return Path(sys.executable)
 
     # Maybe the path is already supplied
     if Path(python).exists():
         return python
 
     # Guess path
-    paths = [Path(path) for path in os.getenv('PATH').split(':')]
+    paths = [Path(path) for path in os.getenv('PATH', '').split(':')]
 
     # Assume that python is a version if it doesn't start with p
     python = f'python{python}' if not python.startswith('p') else python
@@ -458,18 +573,24 @@ def _get_interpreter(python=None):
         if path.absolute().exists():
             # return the first one found
             return path
+    raise InterpreterNotFound(version=python)
 
 
-def _update_environment(path):
-    """Updates environment similar to activate from venv"""
-    path = os.path.expanduser(path) if path.startswith('~') else os.path.abspath(path)
-    name = os.path.basename(path)
+def _update_environment(config: VshConfig) -> Dict:
+    """Updates environment similar to activate command from venv
 
+    Args:
+        config: vsh configuration
+
+    Returns:
+        environment variables set as defined by stdlib venv package
+
+    """
     env = {k: v for k, v in os.environ.items()}
-    env[package_metadata['name'].upper()] = name
+    env[package_metadata['name'].upper()] = config.venv_name
 
-    env['VIRTUAL_ENV'] = path
-    env['PATH'] = ':'.join([os.path.join(env.get('VIRTUAL_ENV'), 'bin')] + env['PATH'].split(':'))
+    env['VIRTUAL_ENV'] = str(config.venv_path)
+    env['PATH'] = ':'.join([str(config.venv_path / 'bin')] + env['PATH'].split(':'))
 
     shell = Path(env.get('SHELL') or '/bin/sh').name
     disable_prompt = env.get('VIRTUAL_ENV_DISABLE_PROMPT') or None
@@ -478,10 +599,10 @@ def _update_environment(path):
         'sh': 'PS1',
         'zsh': 'PROMPT'
         }
-    shell_prompt_var = shell_prompt_mapping.get(shell)
-    prompt = env.get(shell_prompt_var) or click.style("\w", fg="blue") + "\$ "
+    shell_prompt_var = shell_prompt_mapping.get(shell, '')
+    default_prompt = terminal.blue("\\w") + '\\$ '
+    prompt = env.get(shell_prompt_var, None) or default_prompt
     prompt = _escape_zero_length_codes(prompt) if shell in ['bash', 'sh'] else prompt
     if shell_prompt_var and not disable_prompt:
         env[shell_prompt_var] = prompt
-
     return env

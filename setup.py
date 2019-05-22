@@ -1,204 +1,84 @@
-#!/usr/bin/env python
-"""
-Setup.py shouldn't be updated during normal development.
-
-Update:
-   entrypoints.txt  <-- add new command-line interfaces here
-   requirements.txt  <-- required for package to run
-   requirements/*.txt  <-- as appropriate
-"""
-import datetime
-import itertools
 import os
-import shutil
-import sys
+from functools import lru_cache
 from pathlib import Path
+from typing import Dict, Iterable, List, Tuple
 
-from setuptools import Command, setup
+from setuptools import setup
+
+from vsh import package_metadata
 
 try:
+    # pip10+
     import pip._internal.req as req
 except ImportError:
+    # pip9
     import pip.req as req
-
-try:
-    import pypandoc
-except ImportError:
-    pypandoc = None
-
-
-if sys.version_info < (3, 6):
-    sys.stderr.write('Python 3.6+ is required for installation.\n')
-    sys.tracebacklimit = 0
-    sys.exit(1)
 
 
 def main():
-    """Run setup"""
-    metadata = get_package_metadata()
+    repo_path = Path(__file__).parent
 
-    # Run setup
-    setup(**metadata)
+    modules = get_modules(package_metadata, repo_path)
+    packages = parse_packages(modules)
+    requirements = load_package_requirements(packages, repo_path)
+    entrypoints = get_package_entrypoints(repo_path)
 
+    setup(
+        name=package_metadata.name,
+        version=package_metadata.version,
+        description=package_metadata.description,
+        license=package_metadata.license,
 
-class CleanCommand(Command, object):
-    description = 'Remove build artifacts and *.pyc'
-    user_options = list()
+        url=package_metadata.url,
 
-    def initialize_options(self):
-        pass
+        author=package_metadata.author,
+        author_email=package_metadata.author_email,
 
-    def finalize_options(self):
-        pass
+        maintainer=package_metadata.maintainer,
+        maintainer_email=package_metadata.maintainer_email,
 
-    def run(self):
-        repo_path = str(Path(__file__).parent)
-        removables = [
-            'build', '_build', 'dist', 'wheelhouse',
-            '*.egg-info', '*.egg', '.eggs'
-            ]
-        for removable in removables:
-            for path in os.scandir(repo_path):
-                if Path(path).match(removable):
-                    if path.is_dir():
-                        shutil.rmtree(path)
-                    elif path.is_file():
-                        os.remove(path)
+        classifiers=list(package_metadata.classifiers),
+        keywords=list(package_metadata.keywords),
 
-        for root, folders, files in os.walk(repo_path):
-            for folder in folders:
-                if folder == '__pycache__':
-                    fpath = os.path.join(root, folder)
-                    shutil.rmtree(fpath)
-            for filename in files:
-                fpath = os.path.join(root, filename)
-                if Path(filename).match('*.py[co]'):
-                    os.remove(fpath)
+        setup_requires=requirements.get('setup') or [],
+        install_requires=requirements.get('install') or [],
+        tests_require=requirements.get('tests') or [],
+        extras_require=requirements.get('extras') or [],
+
+        packages=packages,
+        entry_points=entrypoints,
+        )
 
 
-# ----------------------------------------------------------------------
-# Support
-# ----------------------------------------------------------------------
-files_in_tree = set()
-folders_in_tree = set()
+def find_package_metadata_filepath(top_path: Path):
+    for path in scan_repo(top_path):
+        if path.name == '__metadata__.py':
+            return path
 
 
-def find_data_files(repo_path=None):
-    """Captures files that are project specific"""
-    repo_path = repo_path or Path(__file__).parent
-
-    include = ['LICENSE', 'requirements', 'requirements*.txt', 'entrypoints.txt']
-    found = [
-        str(path)
-        for path in scan_tree(repo_path)
-        if (any(path.match(included) for included in include)
-            or any(parent.match(included) for parent in path.parents for included in include))
-        ]
-    return found
+def find_package_requirements_filepaths(top_path: Path) -> Tuple[str, Path]:
+    for path in scan_repo(top_path):
+        if path.name == 'requirements.txt':
+            yield 'install', path
+        elif path.name.startswith('requirements-') and path.name.endswith('.txt'):
+            name = path.name.split('requirements-')[-1]
+            yield name, path
+        elif path.name.endswith('.txt') and 'requirements' in path.parts:
+            yield path.stem, path
 
 
-def find_packages(repo_path=None):
-    """Finds packages; replacement for setuptools.find_packages which
-    doesn't support PEP 420.
-
-    Lengthy discussion with no resolution:
-        https://github.com/pypa/setuptools/issues/97
-
-    Assumptions:
-      * Packages are folders
-      * Modules are files
-      * Namespaces are folders without modules
-      * setup.py is for a single package
-      * the folder which contains setup.py is _not_ a package itself
-      * each package falls under a single tree (e.g. requests, requests.api, etc.)
-      * the package is complex enough to have multiple sub folders/modules
-
-    Args:
-        repo_path (str): path to check [default: path of setup.py]
-
-    Returns:
-        list(list, list, list): Returns packages, modules and namespaces
-
-    """
-    repo_path = repo_path or Path(__file__).parent
-    packages = set()
-    modules = set()
-    namespaces = set()
-    python_artifacts = ['__pycache__']
-    repo_artifacts = ['.*']
-    install_artifacts = ['*.egg-info']
-    build_artifacts = ['dist', 'build']
-    test_files = ['tests', 'test', '.tox']
-    artifacts = install_artifacts + build_artifacts + repo_artifacts + python_artifacts + test_files
-    for path in scan_tree(str(repo_path)):
-        # Only include paths with .py
-        if not path.match('*.py'):
-            continue
-
-        # check folders
-        if any(p.match(artifact) for artifact in artifacts for p in path.parents):
-            continue
-
-        # There should be a valid package at this point
-        package_name = str(path.parent).replace(os.path.sep, '.')
-        module_name = str(path).replace(os.path.sep, '.').replace(path.suffix, '')
-        if package_name == '.':
-            module_name = '.' + module_name
-            if module_name == '.setup':
-                continue
-            modules.add(module_name)
-            continue
-
-        modules.add(module_name)
-        packages.add(package_name)
-
-    # find namespaces
-    for module_name in modules:
-        module_path = Path(module_name.replace('.', os.path.sep))
-        package_name = str(module_path.parent).replace(os.path.sep, '.')
-        if package_name in packages:
-            continue
-        namespaces.add(package_name)
-
-    return sorted(packages), sorted(modules), sorted(namespaces)
-
-
-def get_entrypoints(path=None):
-    """
-    """
+def get_package_entrypoints(top_path: Path) -> Dict[str, str]:
     entry_points = {}
-    path = path or 'entrypoints.txt'
-    if not os.path.exists(path):
-        return entry_points
-
-    with open(path) as stream:
-        for line in stream:
-            if not line.strip():
-                continue
-            if line.strip().startswith('#'):
-                continue
-            entry_points.setdefault('console_scripts', []).append(line.strip())
+    for path in scan_repo(top_path):
+        if path.name == 'entrypoints.txt':
+            for entry in parse_entrypoints(path):
+                entry_points.setdefault('console_scripts', []).append(entry)
     return entry_points
-
-
-def get_license(top_path=None):
-    """Reads license file and returns"""
-    repo_path = top_path or os.path.realpath(os.path.dirname(__file__))
-    files = {f.lower(): f for f in os.listdir(repo_path)}
-    permutations = itertools.product(['license'], ['', '.txt'])
-    files = [os.path.join(repo_path, f) for l, f in files.items() if l in permutations]
-    license = ''
-    for filepath in files:
-        if os.path.exists(filepath):
-            with open(filepath, 'r') as stream:
-                license = stream.read()
-                break
-    return license
 
 
 def get_package_metadata(top_path=None):
     """Find the __metadata__.py file and read it"""
-    repo_path = top_path or os.path.realpath(os.path.dirname(__file__))
+    repo_path = str(Path(top_path or Path(__file__).parent).absolute())
     metadata = {}
     prefixes = ('.', '_')
     for root, folders, files in os.walk(repo_path):
@@ -210,130 +90,91 @@ def get_package_metadata(top_path=None):
         for filename in files:
             filepath = Path(os.path.join(rel, filename))
             if filepath.name == '__metadata__.py':
-                exec(filepath.open().read(), globals(), metadata)
-                metadata = metadata.get('package_metadata') or metadata
+                d = dict(locals(), **globals())
+                exec(filepath.open().read(), d, d)
+                metadata = d.get('package_metadata') or metadata
                 break
         if metadata:
             break
 
-    requirements, dependency_links = get_package_requirements(top_path=top_path)
-    packages, modules, namespaces = find_packages()
-    # Package Properties
-    metadata.setdefault('long_description', metadata.get('doc') or get_readme())
-    metadata.setdefault('packages', packages)
-    metadata.setdefault('include_package_data', True)
 
-    # Requirements
-    metadata.setdefault('setup_requires', requirements.get('setup') or [])
-    metadata.setdefault('install_requires', requirements.get('install') or [])
-    metadata.setdefault('tests_require', requirements.get('tests') or requirements.get('test') or [])
-    metadata.setdefault('extras_require', requirements.get('extras') or [])
-    metadata.setdefault('dependency_links', dependency_links)
+def get_modules(package_metadata, top_path: Path) -> List[str]:
+    modules = []
+    for path in scan_repo(top_path):
+        if path.parts[0] == package_metadata.package_name:
+            # Only collect subfolders that have a python file within
+            #   its tree
+            if path.is_dir():
+                if any(path.glob('**/*.py')):
+                    modules.append('.'.join(path.parts))
+    return modules
 
-    # CLI
-    entry_points = get_entrypoints() or {}
-    metadata.setdefault('entry_points', entry_points)
 
-    # Packaging
-    metadata.setdefault('platforms', ['any'])
-    metadata.setdefault('zip_safe', False)
+def parse_packages(modules: List[str]) -> List[str]:
+    packages = []
+    for module_name in modules:
+        if '.' not in module_name:
+            packages.append(module_name)
+    return packages
 
-    year = datetime.datetime.now().year
-    license = get_license() or 'Copyright {year} - all rights reserved'.format(year=year)
-    metadata.setdefault('license', license)
 
-    # Extra data
-    metadata.setdefault('data_files', [('', find_data_files())])
-
-    # Add setuptools commands
-    metadata.setdefault('cmdclass', get_setup_commands())
+def load_package_metadata(path: Path):
+    text = path.read_text(encoding='utf-8')
+    d = dict(locals(), **globals())
+    exec(text, d, d)
+    metadata = d.get('package_metadata')
     return metadata
 
 
-def get_package_requirements(top_path=None):
-    """Find all of the requirements*.txt files and parse them"""
-    repo_path = top_path or os.path.realpath(os.path.dirname(__file__))
-    requirements = {'extras': {}}
-    dependency_links = set()
-    # match on:
-    #    requirements.txt
-    #    requirements-<name>.txt
-    #    requirements_<name>.txt
-    #    requirements/<name>.txt
-    options = '_-/'
-    include_globs = ['requirements*.txt', 'requirements/*.txt']
-    paths = [
-        relpath
-        for relpath in scan_tree(repo_path, include=include_globs)
+def load_package_requirements(packages: List[str], top_path: Path):
+    package_requirements = {'extras': {'all': set(), 'dev': set()}}
+    for name, path in find_package_requirements_filepaths(top_path):
+        reqs, deps = parse_requirements(path)
+        new_reqs = set(package_requirements.get(name) or [])
+        new_reqs.update(reqs)
+        if name not in ['install', 'test', 'tests', 'setup']:
+            package_requirements['extras'].setdefault(name, set()).update(new_reqs)
+            package_requirements['extras']['all'].update(new_reqs)
+            package_requirements['extras']['dev'].update(new_reqs)
+        else:
+            if name in ['tests', 'test']:
+                package_requirements.setdefault('tests', set()).update(new_reqs)
+                package_requirements['extras'].setdefault(name, set()).update(new_reqs)
+                package_requirements['extras']['dev'].update(new_reqs)
+                package_requirements['extras']['all'].update(new_reqs)
+            else:
+                package_requirements['extras']['all'].update(new_reqs)
+                package_requirements.setdefault(name, set()).update(new_reqs)
+
+    # pip doesn't like sets as a list of requirements
+    for key, value in package_requirements.items():
+        if key == 'extras':
+            extras = package_requirements.get(key) or {}
+            for extra_name, reqs in extras.items():
+                extras[extra_name] = sorted(reqs)
+        else:
+            package_requirements[key] = sorted(value)
+
+    package_requirements['extras']['all'].extend(packages)
+    return package_requirements
+
+
+def parse_entrypoints(path: Path) -> Iterable:
+    data = [
+        line.strip()
+        for line in path.read_text(encoding='utf-8').split('\n')
+        if line.strip()
+        if not line.strip().startswith('#')
         ]
-    for path in paths:
-        if 'requirements' in map(str, path.parents):
-            name = path.name.replace(path.suffix, '')
-        elif 'requirements' in path.name:
-            name = path.name.replace('requirements', '').lstrip(options)
-        else:
-            raise Exception('Could not find requirements using ' + path)
-        reqs_, deps = parse_requirements(str(path.absolute()))
-        dependency_links.update(deps)
-        if name in ['install', '']:
-            requirements['install'] = reqs_
-        elif name in ['test', 'tests']:
-            requirements['tests'] = reqs_
-            requirements['extras']['tests'] = reqs_
-        elif name in ['setup']:
-            requirements['setup'] = reqs_
-        else:
-            requirements['extras'][name] = reqs_
-
-    all_reqs = set()
-    dev_reqs = set()
-    for name, req_list in requirements.items():
-        if name in ['install']:
-            all_reqs.update(req_list)
-        elif name in ['extras']:
-            for subname, reqs in req_list.items():
-                all_reqs.update(reqs)
-                dev_reqs.update(reqs)
-        else:
-            all_reqs.update(req_list)
-            dev_reqs.update(req_list)
-
-    requirements['extras']['dev'] = list(sorted(dev_reqs))
-    requirements['extras']['all'] = list(sorted(all_reqs))
-    return requirements, list(sorted(dependency_links))
+    for line in data:
+        yield line
 
 
-def get_readme(top_path=None):
-    """Read the readme for the repo"""
-    path = top_path or os.path.realpath(os.path.dirname(__file__))
-    found = {f.name.lower(): f.name for f in os.scandir(path)}
-    permutations = [a + b for a, b in itertools.product(['readme'], ['.md', '.rst', '.txt'])]
-    files = [os.path.join(path, f) for l, f in found.items() if l in permutations]
-    readme = ''
-    for filepath in files:
-        if pypandoc and filepath.endswith('.md'):
-            readme = pypandoc.convert(filepath, 'rst')
-            break
-        else:
-            with open(filepath, 'r') as stream:
-                readme = stream.read()
-                break
-    return readme
-
-
-def get_setup_commands():
-    """Returns setup command class list"""
-    commands = {
-        'clean': CleanCommand,
-        }
-    return commands
-
-
-def parse_requirements(path):
+def parse_requirements(path: Path):
     template = '{name}{spec}'
     requirements = set()
     dependency_links = set()
-    for requirement in req.parse_requirements(path, session="somesession"):
+    for requirement in req.parse_requirements(str(path), session="somesession"):
         if requirement.markers is not None and not requirement.markers.evaluate():
             continue
 
@@ -354,44 +195,16 @@ def parse_requirements(path):
     return list(sorted(requirements)), list(sorted(dependency_links))
 
 
-def scan_tree(top_path=None, include=None):
-    """Finds files in tree
-
-    * Order is random
-    * Folders which start with . and _ are excluded unless excluded is used (e.g. [])
-    * This list is memoized
-
-    Args:
-        top_path (str): top of folder to search
-        include (list, optional): filters on include if present
-
-    Yields:
-        str: paths as found
-    """
-    repo_path = Path(__file__)
-    if not files_in_tree:
-        for root, folders, files in os.walk(str(top_path or repo_path)):
-            rel = Path(root.replace(str(top_path or repo_path), '').lstrip('/'))
-            # Control traversal
-            folders[:] = [f for f in folders if f not in ['.git']]
-            folders_in_tree.update(folders)
-            # Yield files
-            for filename in files:
-                relpath = rel.joinpath(filename)
-                if relpath not in files_in_tree:
-                    files_in_tree.add(relpath)
-                    if include is not None:
-                        if any(relpath.match(inc) for inc in include):
-                            yield relpath
-                    else:
-                        yield relpath
-    else:
-        for relpath in files_in_tree:
-            if include:
-                if any(relpath.match(inc) for inc in include):
-                    yield relpath
-            else:
-                yield relpath
+@lru_cache(maxsize=None)
+def scan_repo(top_path: Path):
+    paths = []
+    for root, folders, files in os.walk(str(top_path)):
+        root = Path(root).relative_to(top_path)
+        for folder_name in folders:
+            paths.append(root / folder_name)
+        for file_name in files:
+            paths.append(root / file_name)
+    return paths
 
 
 if __name__ == '__main__':

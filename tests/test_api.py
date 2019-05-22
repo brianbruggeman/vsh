@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 
 import pytest
@@ -30,84 +29,13 @@ def scan_tree(path):
         str: paths as found
     """
     for root, folders, files in os.walk(path):
-        rel = Path(root.replace(path, '').lstrip('/'))
+        relative_root = Path(root).relative_to(path)
         # Control traversal
         folders[:] = [f for f in folders if f not in ['.git']]
         # Yield files
         for filename in files:
-            relpath = rel.joinpath(filename)
-            yield relpath
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize("site_packages, overwrite, symlinks, upgrade, include_pip, prompt, python, verbose, interactive, dry_run", [
-    # Defaults
-    (None, None, None, None, None, None, None, None, None, None),
-    # use site-packages
-    (True, None, None, None, None, None, None, None, None, None),
-    # overwrite
-    (None, True, None, None, None, None, None, None, None, None),
-    # symlinks
-    (None, None, True, None, None, None, None, None, None, None),
-    # upgrade
-    (None, None, None, True, None, None, None, None, None, None),
-    # include_pip
-    (None, None, None, None, True, None, None, None, None, None),
-    # include_pip is False
-    (None, None, None, None, False, None, None, None, None, None),
-    # prompt
-    (None, None, None, None, None, 'temp', None, None, None, None),
-    # use python3
-    (None, None, None, None, None, None, '.'.join(map(str, sys.version_info[0:2])), None, None, None),
-    # use python3
-    (None, None, None, None, None, None, '3', None, None, None),
-    # verbose
-    (None, None, None, None, None, None, None, True, None, None),
-    # interactive
-    (None, None, None, None, None, None, None, None, True, None),
-    # dry run
-    (None, None, None, None, None, None, None, None, None, True),
-    ])
-def test_create(tmpdir, site_packages, overwrite, symlinks, upgrade, include_pip, prompt, python, verbose, interactive, dry_run):
-    from vsh import api
-    # TODO: mock dry-runs and interactive behaviors
-    interactive = False
-    dry_run = False
-
-    name = 'test-create'
-    path = str(tmpdir.join(name))
-    assert not os.path.exists(path)
-    created_path = api.create(
-        path=path,
-        site_packages=site_packages,
-        overwrite=overwrite,
-        symlinks=symlinks,
-        upgrade=upgrade,
-        include_pip=include_pip,
-        prompt=prompt,
-        python=python,
-        verbose=verbose,
-        interactive=interactive,
-        dry_run=dry_run)
-    assert created_path == path
-    assert os.path.exists(created_path)
-
-    created_paths = []
-    for root, directories, files in os.walk(created_path):
-        relroot = os.path.join(root.replace(created_path, '').lstrip('/'))
-
-        for directory in directories:
-            dirpath = os.path.join(relroot, directory)
-            created_paths.append(dirpath)
-
-        for filename in files:
-            filepath = os.path.join(relroot, filename)
-            created_paths.append(filepath)
-
-    files_in_structure = list(scan_tree(path))  # noqa
-    # Validate structure
-    expected_valid = True if not any([dry_run, upgrade]) else False
-    assert api.validate_environment(path) is expected_valid
+            relative_path = relative_root / filename
+            yield relative_path
 
 
 @pytest.mark.unit
@@ -120,10 +48,10 @@ def test_enter(tmpdir, capsys, command, expected_output):
     from vsh.api import create, enter
 
     name = 'test-create'
-    path = str(tmpdir.join(name))
-    assert not os.path.exists(path)
+    path = Path(str(tmpdir.join(name)))
+    assert not path.exists()
 
-    # Make sure there's a venv available
+    # Make sure there's a venv availabl
     created_path = create(path=path, overwrite=True)
 
     # Then run the command
@@ -149,13 +77,13 @@ def test_remove(tmpdir, name, error_name, check):
     from vsh import errors
 
     if name:
-        path = str(tmpdir.join(name))
-        assert not os.path.exists(path)
+        path = Path(str(tmpdir.join(name)))
+        assert not path.exists()
         path = create(path)
     else:
         name = 'this-should-not-exist'
-        path = str(tmpdir.join(name))
-        assert not os.path.exists(path)
+        path = Path(str(tmpdir.join(name)))
+        assert not path.exists()
 
     ExpectedException = getattr(errors, error_name) if error_name is not None else None
     if check is True:
@@ -172,7 +100,7 @@ def test_show_envs(tmpdir, capsys):
     from vsh.api import create, remove, show_envs
 
     name = 'test-show-envs'
-    path = str(tmpdir.join(name))
+    path = Path(str(tmpdir.join(name)))
     create(path)
     show_envs(str(tmpdir))
     remove(path)

@@ -8,7 +8,7 @@ counts = Counter()
 
 @pytest.fixture(scope='function')
 def click_runner():
-    from vsh.cli.click.testing import CliRunner
+    from vsh.vendored.click.testing import CliRunner
 
     runner = CliRunner()
     yield runner

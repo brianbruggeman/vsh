@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------------------
+# Project
+# -----------------------------------------------------------------------------
+function install_package {
+  pip install --upgrade pip
+  pip install -e .[all]
+}
+
+function setup_cli_completion {
+  eval "$(_VSH_COMPLETE=source vsh)"
+}
+
+command -v vsh >/dev/null 2>&1 || install_package
+setup_cli_completion
+hash -r
