@@ -13,20 +13,6 @@ def click_runner():
 
 
 @pytest.fixture(scope='function')
-def package_name():
-    from vsh.__metadata__ import package_metadata
-
-    return package_metadata['name']
-
-
-@pytest.fixture(scope='function')
-def package_version():
-    from vsh.__metadata__ import package_metadata
-
-    return package_metadata['version']
-
-
-@pytest.fixture(scope='function')
 def workon_home(tmpdir) -> Path:
     old_workon_home = os.environ.get('WORKON_HOME', '')
     # tmpdir is actually a LocalPath vs a PosixPath and for some reason

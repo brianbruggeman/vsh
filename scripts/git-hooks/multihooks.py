@@ -74,4 +74,4 @@ def execute_hooks():
 
 if __name__ == '__main__':
     import sys
-    sys.exit(execute_hooks() or 0)
+    exit(execute_hooks() or 0)

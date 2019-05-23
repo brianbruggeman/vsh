@@ -1,2 +1,2 @@
 # Package command-line interface
-vsh = vsh.cli.vsh:vsh
+vsh = vsh.cli:vsh

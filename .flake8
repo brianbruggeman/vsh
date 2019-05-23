@@ -1,0 +1,56 @@
+[flake8]
+ignore =
+    # Unexpected indentation (comment)
+    # https://lintlyci.github.io/Flake8Rules/rules/E116.html
+    E116,
+    # Continuation line under-indented for hanging indent
+    # https://lintlyci.github.io/Flake8Rules/rules/E121.html
+    E121,
+    # Closing bracket does not match indentation of opening bracket's line
+    # https://lintlyci.github.io/Flake8Rules/rules/E123.html
+    E123,
+    # Continuation line over-indented for hanging indent
+    # https://lintlyci.github.io/Flake8Rules/rules/E126.html
+    E126,
+    # Continuation line under-indented for visual indent
+    # https://lintlyci.github.io/Flake8Rules/rules/E128.html
+    E128,
+    # Closing bracket is missing indentation
+    # https://lintlyci.github.io/Flake8Rules/rules/E133.html
+    E133,
+    # Line too long
+    # https://lintlyci.github.io/Flake8Rules/rules/E501.html
+    E501,
+    # List comprehension redefines name from line n
+    # https://lintlyci.github.io/Flake8Rules/rules/F812.html
+    # This catches repeat uses that are not reflective of the
+    #  rule as defined, so we remove it.
+    F812,
+    # Line break occurred before a binary operator
+    # https://lintlyci.github.io/Flake8Rules/rules/W503.html
+    W503
+
+filename =
+    ./vsh/*.py
+    ./tests/*.py
+    ./scripts/*.py
+
+exclude =
+    .tox,
+    .eggs,
+    # ignore git repo
+    .git,
+    # ignore dunder files (e.g. __init__)
+    __*.py,
+    # ignore cached files
+    __pycache__,
+    # ignore build artifacts
+    build,
+    # ignore build artifacts
+    dist,
+    # ignore 3rd party
+    vsh/vendored
+
+inline-quotes = '
+multiline-quotes = '''
+docstring-quotes = """

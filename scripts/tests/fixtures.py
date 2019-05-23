@@ -5,28 +5,6 @@ import pytest
 
 
 @pytest.fixture(scope='function')
-def click_runner():
-    from vsh.vendored.click.testing import CliRunner
-
-    runner = CliRunner()
-    yield runner
-
-
-@pytest.fixture(scope='function')
-def package_name():
-    from vsh.__metadata__ import package_metadata
-
-    return package_metadata['name']
-
-
-@pytest.fixture(scope='function')
-def package_version():
-    from vsh.__metadata__ import package_metadata
-
-    return package_metadata['version']
-
-
-@pytest.fixture(scope='function')
 def workon_home(tmpdir) -> Path:
     old_workon_home = os.environ.get('WORKON_HOME', '')
     # tmpdir is actually a LocalPath vs a PosixPath and for some reason
@@ -43,3 +21,15 @@ def venv_path(workon_home) -> Path:
     venv_name = 'mocked-venv'
     venv_path = workon_home / venv_name
     return venv_path
+
+
+@pytest.fixture(scope='function')
+def package_path() -> Path:
+    import vsh
+
+    return Path(vsh.__file__).parent
+
+
+@pytest.fixture(scope='function')
+def repo_path(package_path) -> Path:
+    return package_path.parent

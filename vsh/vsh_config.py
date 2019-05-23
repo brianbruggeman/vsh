@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 from .__metadata__ import package_metadata
-
 from .vendored import toml
 
 PathString = Union[str, Path]
@@ -52,12 +51,6 @@ class VshConfig:
         return json
 
     def __post_init__(self):
-        if not self.venv_name and not self.venv_path:
-            # It's possible to load an existing file and then populate
-            #   this configuration
-            # raise InvalidConfiguration(venv_name=self.venv_name, venv_path=self.venv_path)
-            pass
-
         if self.shell_path is None or (self.shell_path and not isinstance(self.shell_path, Path)):
             self.shell_path = Path(os.getenv('SHELL'))
 
@@ -90,7 +83,8 @@ class VshConfig:
             toml.dump(self.json, stream)
 
     def load(self, config_path: Optional[Path] = None):
-        config_path = Path(config_path or self.vsh_config_path)
+        if not config_path:
+            config_path = Path(self.vsh_config_path)
         if config_path.exists():
             text = config_path.read_text(encoding='utf-8')
             data = self.parse(text)

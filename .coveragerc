@@ -1,0 +1,22 @@
+[run]
+branch = True
+omit =
+    setup.py
+    ./*.py
+source =
+    vsh
+    scripts
+    tests
+
+
+[html]
+directory = docs/_build/html/
+
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    def __dir__
+    if __name__ == __main__.:

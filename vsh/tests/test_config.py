@@ -7,23 +7,24 @@ from typing import Any, Dict, Type
 import pytest
 
 
-class NonValue:
-    pass
+class UnsetValue:
+    """Place holder to represent an unset value
+    """
 
 
-NonValue = NonValue()
+unset_value = UnsetValue()
 
 
 @dataclass
 class VenvConfigAttrTestCase:
     name: str = ''
-    value: Any = NonValue
-    expected_type: Type = NonValue
-    expected_value: Any = NonValue
+    value: Any = unset_value
+    expected_type: Type = UnsetValue
+    expected_value: Any = unset_value
 
     @property
     def kwds(self) -> Dict[str, Any]:
-        if self.value != NonValue:
+        if self.value != unset_value:
             return {self.name: self.value}
         return {}
 
@@ -37,7 +38,7 @@ class VenvConfigAttrTestCase:
     VenvConfigAttrTestCase(name='working_path'),
     VenvConfigAttrTestCase(name='working_path', value=str(Path.home()), expected_value=Path.home()),
     VenvConfigAttrTestCase(name='interpreter_path'),
-    VenvConfigAttrTestCase(name='interpreter_path', value=sys.executable, expected_value=Path(sys.executable)),
+    VenvConfigAttrTestCase(name='interpreter_path', value=sys.executable, expected_value=Path(str(sys.executable))),
     VenvConfigAttrTestCase(name='shell_path', expected_value=Path(os.getenv('SHELL'))),
     VenvConfigAttrTestCase(name='shell_path', value=os.getenv('SHELL'), expected_value=Path(os.getenv('SHELL'))),
     VenvConfigAttrTestCase(name='vsh_version'),
@@ -53,15 +54,15 @@ def test_vsh_config_attributes(test_case):
     kwds = test_case.kwds
     # this will guarantee we always have a venv name to avoid the
     #  invalid config exception
-    venv_name = test_case.value if test_case.name == 'venv_name' and test_case.value != NonValue else 'foo'
-    if test_case.name == 'venv_path' and test_case.value != NonValue:
+    venv_name = test_case.value if test_case.name == 'venv_name' and test_case.value != unset_value else 'foo'
+    if test_case.name == 'venv_path' and test_case.value != unset_value:
         venv_name = Path(test_case.value).name
     kwds.update({'venv_name': venv_name})
 
     config = VshConfig(**kwds)
     assert hasattr(config, test_case.name)
     config_value = getattr(config, test_case.name)
-    if test_case.expected_type != NonValue:
+    if test_case.expected_type != UnsetValue:
         assert isinstance(config_value, test_case.expected_type)
-    if test_case.expected_value != NonValue:
+    if test_case.expected_value != unset_value:
         assert config_value == test_case.expected_value

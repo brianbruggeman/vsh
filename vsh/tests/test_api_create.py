@@ -1,16 +1,15 @@
-import os
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Union
 
 import pytest
 
-from .common import scan_tree, TestParam
+from .common import TestParam, scan_tree
 
 
 @dataclass
-class CreateTestParams(TestParam):
+class CreateTestCase(TestParam):
     """Simple test parameters for tests.
 
     This makes reading much, much easier and makes developers happier.
@@ -39,51 +38,56 @@ class CreateTestParams(TestParam):
     interactive: bool = False
     dry_run: bool = False
 
+    @property
+    def kwds(self):
+        return asdict(self)
+
 
 @pytest.mark.unit
-@pytest.mark.parametrize("params", [
-    CreateTestParams(),
-    CreateTestParams(site_packages=True),
-    CreateTestParams(overwrite=True),
-    CreateTestParams(symlinks=True),
-    CreateTestParams(upgrade=True),
-    CreateTestParams(include_pip=True),
-    CreateTestParams(prompt='temp'),
+@pytest.mark.parametrize("test_case", [
+    CreateTestCase(site_packages=True),
+    CreateTestCase(overwrite=True),
+    CreateTestCase(symlinks=True),
+    CreateTestCase(upgrade=True),
+    CreateTestCase(include_pip=True),
+    CreateTestCase(prompt='temp'),
     # use current python3 with a <major>.<minor> version
-    CreateTestParams(python='.'.join(map(str, sys.version_info[0:2]))),
+    CreateTestCase(python='.'.join(map(str, sys.version_info[0:2]))),
     # simple python3
-    CreateTestParams(python='3'),
-    CreateTestParams(verbose=True),
-    CreateTestParams(interactive=True),
-    CreateTestParams(dry_run=True),
+    CreateTestCase(python='3'),
+    CreateTestCase(verbose=1),
+    CreateTestCase(interactive=True),
+    CreateTestCase(dry_run=True),
     ])
-def test_create(tmpdir, params):
+def test_create(venv_path, test_case):
     from vsh import api
     # TODO: mock dry-runs and interactive behaviors
-    params.interactive = False
-    params.dry_run = False
+    test_case.interactive = False
+    test_case.dry_run = False
 
-    name = 'test-create'
-    path = Path(str(tmpdir.join(name)))
-    assert not path.exists()
-    created_path = api.create(path=path, **params)
-    assert created_path == path
+    pre_create_folder_structure = list(scan_tree(venv_path))  # noqa
+
+    expected_venv_path = venv_path
+    assert not expected_venv_path.exists()
+    created_path = api.create(path=expected_venv_path, **test_case.kwds)
+    assert isinstance(created_path, Path)
     assert created_path.exists()
+    assert expected_venv_path.exists()
+    assert created_path == expected_venv_path
 
-    created_paths = []
-    for root, directories, files in os.walk(str(created_path)):
-        relroot = Path(root).relative_to(created_path)
-
-        for directory in directories:
-            dirpath = relroot / directory
-            created_paths.append(dirpath)
-
-        for filename in files:
-            filepath = relroot / filename
-            created_paths.append(filepath)
-
-    files_in_structure = list(scan_tree(path))  # noqa
+    post_create_folder_structure = list(scan_tree(expected_venv_path))  # noqa
     # Validate structure
-    expected_valid = True if not any([params.dry_run, params.upgrade]) else False
-    assert api.validate_environment(path) is expected_valid
+    expected_valid = True if not any([test_case.dry_run, test_case.upgrade]) else False
+    assert api.validate_environment(expected_venv_path) is expected_valid
 
+    expected_structure = {
+        Path('bin/python'),
+        }
+
+    new_files = set(post_create_folder_structure) - set(pre_create_folder_structure)
+    for path in expected_structure:
+        assert path in new_files
+    for path in post_create_folder_structure:
+        actual_path = venv_path / path
+        if actual_path.exists():
+            actual_path.unlink()

@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Set, Tuple
 
-from .__metadata__ import package_metadata
 from . import terminal
+from .__metadata__ import package_metadata
 from .builder import VenvBuilder
-from .vsh_config import VshConfig, WORKON_HOME
-from .vendored import click
 from .errors import InterpreterNotFound, InvalidEnvironmentError, PathNotFoundError, VenvConfigNotFound, VenvNameError
+from .vendored import click
+from .vsh_config import WORKON_HOME, VshConfig
 
 __all__ = ('create', 'enter', 'remove', 'show_envs', 'show_version')
 
@@ -103,7 +103,7 @@ def create_vsh_config(name: str, path: Path, working: Optional[Path] = None, vsh
         working_path=working,
         vsh_config_path=vsh_config_path,
         )
-    config.dump(config.vsh_config_path)
+    config.dump(Path(config.vsh_config_path))
     return config
 
 
@@ -131,8 +131,8 @@ def enter(path: Path, command: Optional[Iterable[str]] = None, verbose: int = 0,
     verbose = max(int(verbose or 0), 0)
     env = _update_environment(config=config)
     # Setup the environment scripts
-    working = working or config.working_path
-    cwd = Path.cwd() if ignore_working else Path(working or Path.cwd())
+    working_path = working or config.working_path
+    cwd = Path.cwd() if ignore_working else Path(working_path or Path.cwd())
     # This should work for all POSIX environments as well as Powershell
     source = '.'
     commands = []
@@ -150,8 +150,35 @@ def enter(path: Path, command: Optional[Iterable[str]] = None, verbose: int = 0,
     return proc.returncode
 
 
+def find_environment_folders(path: Optional[Path] = None, verbose: int = 0) -> Iterable[Tuple[str, Path]]:
+    """Find location of the virtual environments
+
+    Args:
+        path: path to virtual environment home
+
+    Yields:
+        - name: venv name
+        - path: venv path
+
+    """
+    verbose = max(int(verbose or 0), 0)
+    path = path or WORKON_HOME
+    for root, directories, files in os.walk(path):
+        found = []
+        for index, name in enumerate(directories):
+            directory = Path(root) / name
+            if not validate_environment(directory):
+                continue
+            yield name, directory
+            found.append(name)
+        # This makes the search "fast" by skipping out on sub folders
+        #  that do not need to be searched because they have already
+        #  been identified as valid environments
+        directories[:] = [d for d in directories if d not in found]
+
+
 def find_vsh_rc_files(venv_path: Path) -> Iterable[Path]:
-    """Find the vsh configuration files
+    """Find the vshrc files
 
     Args:
         venv_path: path to virtual environment
@@ -203,30 +230,22 @@ def find_vsh_rc_files(venv_path: Path) -> Iterable[Path]:
                         yield filepath
 
 
-def find_environment_folders(path: Optional[Path] = None) -> Iterable[Tuple[str, Path]]:
-    """Find location of the virtual environments
+def find_vsh_config(name: str, check: bool = True) -> Path:
+    """Finds the vsh venv configuration file
 
     Args:
-        path: path to virtual environment home
+        name: the name of the venv
+        check: if true and vsh not found, then raises an error
 
-    Yields:
-        - name: venv name
-        - path: venv path
-
+    Raises:
+        VenvConfigNotFound when check is True and config file is not found
     """
-    path = path or WORKON_HOME
-    for root, directories, files in os.walk(path):
-        found = []
-        for index, name in enumerate(directories):
-            directory = Path(root) / name
-            if not validate_environment(directory):
-                continue
-            yield name, directory
-            found.append(name)
-        # This makes the search "fast" by skipping out on sub folders
-        #  that do not need to be searched because they have already
-        #  been identified as valid environments
-        directories[:] = [d for d in directories if d not in found]
+    if not name:
+        raise VenvConfigNotFound(name=name)
+    vsh_config_path = Path.home() / '.vsh' / f'{name}.cfg'
+    if check and not vsh_config_path.exists():
+        raise VenvConfigNotFound(name=name)
+    return vsh_config_path
 
 
 def get_venv_home(name: str, check: bool = True) -> Path:
@@ -251,24 +270,6 @@ def get_venv_home(name: str, check: bool = True) -> Path:
     elif not check:
         return default_path / name
     raise VenvNameError(name=name)
-
-
-def find_vsh_config(name: str, check: bool = True) -> Path:
-    """Finds the vsh venv configuration file
-
-    Args:
-        name: the name of the venv
-        check: if true and vsh not found, then raises an error
-
-    Raises:
-        VenvConfigNotFound when check is True and config file is not found
-    """
-    if not name:
-        raise VenvConfigNotFound(name=name)
-    vsh_config_path = Path.home() / '.vsh' / f'{name}.cfg'
-    if check and not vsh_config_path.exists():
-        raise VenvConfigNotFound(name=name)
-    return vsh_config_path
 
 
 def read_vsh_config(path: Path) -> VshConfig:
@@ -341,7 +342,7 @@ def show_envs(path: Optional[Path] = None):
         path: path to virtual environment folder
     """
     path = path or WORKON_HOME or Path.cwd()
-    for name, path in sorted(find_environment_folders(path=path)):
+    for name, path in sorted(find_environment_folders(path=path, verbose=1)):
         terminal.echo(f'Found {terminal.yellow(name)} under: {terminal.yellow(path)}')
 
 
@@ -424,7 +425,7 @@ def validate_environment(path: Path, check: bool = False) -> bool:
 
         # check for python binaries
         python_name = paths['lib'].parent.name
-        python_ver_match = re.search('(?P<interpreter>python|pypy)\.?(?P<major>\d+)(\.?(?P<minor>\d+))', python_name)
+        python_ver_match = re.search('(?P<interpreter>python|pypy)\.?(?P<major>\d+)(\.?(?P<minor>\d+))', python_name)  # noqa
         if python_ver_match:
             python_executable = paths['bin'].joinpath('python')
             python_ver_executable = paths['bin'].joinpath(python_name)
@@ -587,11 +588,14 @@ def _update_environment(config: VshConfig) -> Dict:
 
     """
     env = {k: v for k, v in os.environ.items()}
+    # VSH specific variable to set venv name
     env[package_metadata['name'].upper()] = config.venv_name
 
+    # Expected venv changes to environment variables during an activate
     env['VIRTUAL_ENV'] = str(config.venv_path)
     env['PATH'] = ':'.join([str(config.venv_path / 'bin')] + env['PATH'].split(':'))
 
+    # Updates to shell prompt to show virtual environment info
     shell = Path(env.get('SHELL') or '/bin/sh').name
     disable_prompt = env.get('VIRTUAL_ENV_DISABLE_PROMPT') or None
     shell_prompt_mapping = {

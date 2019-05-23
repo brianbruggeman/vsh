@@ -21,8 +21,8 @@ class VenvBuilder(venv.EnvBuilder):
         context = self.ensure_directories(env_dir=env_dir, executable=executable)
         # See issue 24875. We need system_site_packages to be False
         # until after pip is installed.
-        true_system_site_packages = self.system_site_packages
-        self.system_site_packages = False
+        true_system_site_packages: bool = self.system_site_packages
+        self.system_site_packages: bool = False
         self.create_configuration(context)
         self.setup_python(context)
         if self.with_pip:
@@ -49,7 +49,7 @@ class VenvBuilder(venv.EnvBuilder):
         Returns:
             types.SimpleNamespace: context
         """
-        env_dir = Path(env_dir)
+        env_path: Path = Path(env_dir)
 
         def create_if_needed(d):
             d = Path(d)
@@ -59,14 +59,14 @@ class VenvBuilder(venv.EnvBuilder):
                 raise ValueError(f'Unable to create directory {d!r}')
 
         executable = executable or sys.executable
-        if env_dir.exists() and self.clear:
-            self.clear_directory(env_dir)
+        if env_path.exists() and self.clear:
+            self.clear_directory(env_path)
         context = types.SimpleNamespace()
-        context.env_dir = str(env_dir)
-        context.env_name = env_dir.stem
+        context.env_dir = str(env_path)
+        context.env_name = env_path.stem
         prompt = self.prompt if self.prompt is not None else context.env_name
         context.prompt = f'({prompt}) '
-        create_if_needed(env_dir)
+        create_if_needed(env_path)
         dirname, exename = os.path.split(os.path.abspath(executable))
         context.executable = executable
         context.python_dir = dirname
@@ -74,21 +74,21 @@ class VenvBuilder(venv.EnvBuilder):
         if sys.platform == 'win32':
             binname = 'Scripts'
             incpath = 'Include'
-            libpath = env_dir / 'Lib' / 'site-packages'
+            libpath = env_path / 'Lib' / 'site-packages'
         else:
             binname = 'bin'
             incpath = 'include'
-            libpath = env_dir / 'lib' / exename / 'site-packages'
-        path = env_dir / incpath
+            libpath = env_path / 'lib' / exename / 'site-packages'
+        path = env_path / incpath
         context.inc_path = str(path)
         create_if_needed(path)
         create_if_needed(libpath)
         # Issue 21197: create lib64 as a symlink to lib on 64-bit non-OS X POSIX
         if (sys.maxsize > 2**32) and (os.name == 'posix') and (sys.platform != 'darwin'):
-            link_path = os.path.join(env_dir, 'lib64')
-            if not os.path.exists(link_path):   # Issue #21643
-                os.symlink('lib', link_path)
-        binpath = env_dir / binname
+            link_path = env_path / 'lib64'
+            if not link_path.exists():   # Issue #21643
+                os.symlink('lib', str(link_path))
+        binpath = env_path / binname
         context.bin_path = str(binpath)
         context.bin_name = binname
         context.env_exe = str(binpath / exename)

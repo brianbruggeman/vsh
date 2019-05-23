@@ -3,7 +3,6 @@
 # present on the command-line, then the test will be skipped.
 import pytest
 
-
 cli_options = {
     'stress': 'run stress tests',
     'slow': 'run slow-running tests',

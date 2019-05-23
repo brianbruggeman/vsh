@@ -21,8 +21,10 @@ class BaseError(Exception):
 class InterpreterNotFound(BaseError):
     """ERROR: Could not find interpreter for: {version}"""
 
+
 class InvalidConfiguration(BaseError):
     """ERROR: Configuration for venv "{venv_name}" is not valid under "{venv_path}" """
+
 
 class InvalidEnvironmentError(BaseError):
     """ERROR: Path is not a valid environment: {path}"""

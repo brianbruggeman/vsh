@@ -15,9 +15,9 @@ import pytest
     # Check verbose = False
     ('Stranger Things', False, '')
     ])
-def test_echo(capsys, text, verbose, expected):
+def test_echo(capfd, text, verbose, expected):
     from vsh.terminal import echo
 
     echo(text, verbose=verbose)
-    out, err = capsys.readouterr()
-    assert out == expected
+    capture = capfd.readouterr()
+    assert capture.out == expected

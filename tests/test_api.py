@@ -39,31 +39,6 @@ def scan_tree(path):
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("command, expected_output", [
-    # Simple echo command
-    ('echo "Hello, World!"', "Hello, World!"),
-    ('env', "VSH=test-create"),
-    ])
-def test_enter(tmpdir, capsys, command, expected_output):
-    from vsh.api import create, enter
-
-    name = 'test-create'
-    path = Path(str(tmpdir.join(name)))
-    assert not path.exists()
-
-    # Make sure there's a venv availabl
-    created_path = create(path=path, overwrite=True)
-
-    # Then run the command
-    enter(created_path, command)
-
-    # TODO: Make this actually work
-    # Validate that the command performed correctly
-    # captured = capsys.readouterr()
-    # assert expected_output in captured.out
-
-
-@pytest.mark.unit
 @pytest.mark.parametrize("name, error_name, check", [
     # Just remove without pre-creating; an error should be raised with check=True
     (None, 'InvalidEnvironmentError', True),
@@ -72,17 +47,16 @@ def test_enter(tmpdir, capsys, command, expected_output):
     # Remove after creating
     ('test-create', None, None),
     ])
-def test_remove(tmpdir, name, error_name, check):
+def test_remove(workon_home, venv_path, name, error_name, check):
     from vsh.api import create, remove
     from vsh import errors
 
     if name:
-        path = Path(str(tmpdir.join(name)))
-        assert not path.exists()
-        path = create(path)
+        assert not venv_path.exists()
+        path = create(path=venv_path)
     else:
         name = 'this-should-not-exist'
-        path = Path(str(tmpdir.join(name)))
+        path = workon_home / name
         assert not path.exists()
 
     ExpectedException = getattr(errors, error_name) if error_name is not None else None
@@ -96,28 +70,26 @@ def test_remove(tmpdir, name, error_name, check):
 
 
 @pytest.mark.unit
-def test_show_envs(tmpdir, capsys):
+def test_show_envs(venv_path, capfd):
     from vsh.api import create, remove, show_envs
 
-    name = 'test-show-envs'
-    path = Path(str(tmpdir.join(name)))
-    create(path)
-    show_envs(str(tmpdir))
-    remove(path)
-
-    out, err = capsys.readouterr()
-    assert name in out
+    create(path=venv_path)
+    # must be a path that contains virtual environments
+    show_envs(path=venv_path.parent)
+    capture = capfd.readouterr()
+    remove(path=venv_path)
+    assert venv_path.name in capture.out
 
 
 @pytest.mark.unit
-def test_show_version(tmpdir, capsys):
+def test_show_version(capfd):
     from vsh.api import show_version
     from vsh.__metadata__ import package_metadata
 
     version = package_metadata['version']
     show_version()
 
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert version in out
 
 
@@ -140,10 +112,9 @@ def test_show_version(tmpdir, capsys):
         True,
         True),
     ])
-def test_validate_environment(tmpdir, structure, check, expected):
+def test_validate_environment(venv_path, structure, check, expected):
     from vsh import api
 
-    tmp_venv = Path(str(tmpdir.join('test-validate-environment')))
     for path in structure:
-        touch(tmp_venv.joinpath(path))
-    assert expected == api.validate_environment(tmp_venv, check=check)
+        touch(venv_path / path)
+    assert expected == api.validate_environment(venv_path, check=check)

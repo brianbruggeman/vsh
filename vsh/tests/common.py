@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 
-def scan_tree(path):
+def scan_tree(path: Path):
     """Finds files in tree
 
     * Order is random
@@ -10,12 +10,12 @@ def scan_tree(path):
     * This list is memoized
 
     Args:
-        top_path (str): top of folder to search
+        top_path: top of folder to search
 
     Yields:
         str: paths as found
     """
-    for root, folders, files in os.walk(path):
+    for root, folders, files in os.walk(str(path)):
         relative_root = Path(root).relative_to(path)
         # Control traversal
         folders[:] = [f for f in folders if f not in ['.git']]
@@ -65,4 +65,3 @@ class TestParam(EmulateSequence, EmulateMap):
     To make the parmas work, it must "look" like a param tuple so
     __len__ and __iter__ are added.
     """
-

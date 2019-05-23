@@ -2,6 +2,11 @@
 VERSIONS
 ========
 
+0.7.1
+-----
+- Bug fixes
+- updates for style and flake8 violations
+
 
 0.7.0
 -----

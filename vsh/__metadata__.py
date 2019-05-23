@@ -69,7 +69,7 @@ class PackageMetadata:
 
     """)
 
-    version: str = '0.7.0'  # PEP 440
+    version: str = '0.7.1'  # PEP 440
     # These are set in post init
     major: int = field(init=False, repr=False, default=0)
     minor: int = field(init=False, repr=False, default=0)

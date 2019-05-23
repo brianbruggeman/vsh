@@ -6,9 +6,8 @@ import textwrap
 from pathlib import Path
 
 from vsh import api, terminal
-from vsh.vendored import click, colorama
 from vsh.errors import VenvNameError
-
+from vsh.vendored import click, colorama
 
 colorama.init()
 atexit.register(colorama.deinit)
@@ -40,13 +39,13 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_co
     if shell_completion:
         # Todo: fix bash/shell completion
         subprocess.run('. vsh', shell=True)
-        sys.exit(0)
+        exit(0)
     if ls:
         api.show_envs()
         exit(0)
     elif version:
         api.show_version()
-        sys.exit(0)
+        exit(0)
     else:
         try:
             name, path = api.validate_venv_name_and_path(name=name, path=path)
@@ -66,7 +65,7 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_co
         terminal.echo('\nERROR: A name or path must be provided.')
         sys.tracebacklimit = 0
         return_code = 1
-        sys.exit(return_code)
+        exit(return_code)
 
     if not path:
         path = api.get_venv_home(name=name)
@@ -88,26 +87,26 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_co
             remove = True
 
     if (sys.platform in ['win32'] or command) and not create_only:
-        return_code = api.enter(path, command, verbose=verbose - 1,  working=working, ignore_working=ignore_working)
+        return_code = api.enter(path, command, verbose=verbose - 1, working=working, ignore_working=ignore_working)
 
     if ephemeral and not (force or remove):
         msg = textwrap.dedent(f"""\
-        
+
         {terminal.yellow("WARNING: Ephemeral option ignored. Aborting removal.")}
-        
+
         Virtual environment "{terminal.green(name)}" existed previously.
         To remove, run:
-        
+
             {terminal.blue(f"vsh -r {name}")}
-         
-        """)
+
+        """)  # noqa
         terminal.echo(msg)
 
     if remove:
         api.remove(path, verbose=verbose - 1, interactive=interactive, dry_run=dry_run)
 
     sys.tracebacklimit = 0
-    sys.exit(return_code)
+    exit(return_code)
 
 
 if __name__ == '__main__':

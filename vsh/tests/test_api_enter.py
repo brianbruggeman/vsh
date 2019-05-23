@@ -1,4 +1,4 @@
-import subprocess
+import shlex
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Union
@@ -42,12 +42,22 @@ class EnterVenvTestCase:
 
 @pytest.mark.parametrize('test_case', [
     EnterVenvTestCase(command=['env']),
-    EnterVenvTestCase(command=['echo', '"hello, world"']),
+    EnterVenvTestCase(command=shlex.split('echo -n "hello, world"'), expected_stdout="hello, world"),
     ])
-def test_api_enter(test_case):
+def test_api_enter(test_case, capfd, venv_path):
     """Tests build_vsh_rc_file properly creates a .vshrc
     """
-    from vsh.api import enter
+    from vsh.api import create, enter
 
-    exit_code = enter(**test_case.kwds)
+    tmp_venv_path = venv_path
+    assert not tmp_venv_path.exists()
+    created_venv_path = create(path=tmp_venv_path, overwrite=True)
+    assert created_venv_path.exists()
+    kwds = test_case.kwds
+    kwds['path'] = created_venv_path
+
+    exit_code = enter(**kwds)
     assert exit_code == test_case.expected_return_code
+    capture = capfd.readouterr()
+    if test_case.expected_stdout:
+        assert capture.out == test_case.expected_stdout, f'{capture.out}'
