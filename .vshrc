@@ -6,10 +6,16 @@ function install_package {
   pip install -e .[all]
 }
 
-function setup_cli_completion {
-  eval "$(_VSH_COMPLETE=source vsh)"
+# -----------------------------------------------------------------------------
+# Project
+# -----------------------------------------------------------------------------
+function shell_completion {
+    if [ -n "$ZSH_VERSION" ]; then
+        eval "$(_VSH_COMPLETE=source_zsh vsh)"
+    elif [ -n "$BASH_VERSION" ]; then
+        eval "$(_VSH_COMPLETE=source vsh)"
+    fi
 }
-
 command -v vsh >/dev/null 2>&1 || install_package
-setup_cli_completion
+shell_completion
 hash -r

@@ -5,11 +5,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 from .__metadata__ import package_metadata
+from .env import env
 from .vendored import toml
 
 PathString = Union[str, Path]
-HOME = Path.home()
-WORKON_HOME = Path(os.getenv('WORKON_HOME', '') or HOME / '.virtualenvs')
 
 
 def converter(result: List[Tuple]) -> dict:
@@ -37,6 +36,7 @@ class VshConfig:
         vsh_version: version of vsh
 
     """
+
     venv_name: Optional[str] = None
     venv_path: Optional[PathString] = None
     vsh_config_path: Optional[PathString] = None
@@ -52,7 +52,7 @@ class VshConfig:
 
     def __post_init__(self):
         if self.shell_path is None or (self.shell_path and not isinstance(self.shell_path, Path)):
-            self.shell_path = Path(os.getenv('SHELL'))
+            self.shell_path = env.SHELL
 
         if self.working_path and not isinstance(self.working_path, Path):
             self.working_path = Path(self.working_path)
@@ -67,11 +67,10 @@ class VshConfig:
         if self.venv_path and not self.venv_name:
             self.venv_name = self.venv_path.name
         elif self.venv_path is None and self.venv_name:
-            venv_home = WORKON_HOME
-            self.venv_path = venv_home / self.venv_name
+            self.venv_path = env.WORKON_HOME / self.venv_name
 
         if not self.vsh_config_path and self.venv_name:
-            self.vsh_config_path = Path.home() / '.vsh' / f'{self.venv_name}.cfg'
+            self.vsh_config_path = Path.home() / ".vsh" / f"{self.venv_name}.cfg"
 
         if self.interpreter_path is None:
             self.interpreter_path = Path(sys.executable)
@@ -79,21 +78,22 @@ class VshConfig:
             self.interpreter_path = self._find_interpreter_path(self.interpreter_path)
 
     def dump(self, config_path: Path):
-        with config_path.open('w') as stream:
+        with config_path.open("w") as stream:
             toml.dump(self.json, stream)
 
     def load(self, config_path: Optional[Path] = None):
-        if not config_path:
+        if not config_path and self.vsh_config_path:
             config_path = Path(self.vsh_config_path)
-        if config_path.exists():
-            text = config_path.read_text(encoding='utf-8')
+        if config_path and config_path.exists():
+            text = config_path.read_text(encoding="utf-8")
             data = self.parse(text)
             for field_name, value in asdict(self).items():
                 if field_name in data:
                     value = data.get(field_name)
-                    if field_name.endswith('_path'):
-                        default_value = value
-                        value = self._load_path(value, default_value)
+                    if field_name.endswith("_path"):
+                        value = self._load_path(value)
+                    if value is None and field_name == "shell_path" and env.SHELL and os.name == "nt":
+                        value = Path(r"powershell.exe")
                     setattr(self, field_name, value)
         return self
 
@@ -104,7 +104,7 @@ class VshConfig:
         return interpreter
 
     @staticmethod
-    def _load_path(path: str, default: Path):
+    def _load_path(path: str, default: Optional[Path] = None):
         new_path = Path(path.strip('"'))
         if new_path.expanduser().resolve().absolute().exists():
             return new_path

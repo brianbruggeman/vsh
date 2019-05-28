@@ -16,12 +16,15 @@ that was the correct approach, but I wanted to extend the tool without
 any bureaucracy or red tape.  Some of these choices could alienate the
 general community, so this is its own project.
 
-* Python 3.6+
+* Python 3.7+
 * Even more streamlined command-line interface
 * Production installation setting compatible with something like Ansible
 * Even better control on environment:
-    - executes scripts (bash, python, other) upon startup and teardown
+    - executes scripts (bash, python, other) upon startup (DONE) and teardown (TODO)
     - change environment variables
+* An easy way to embed vsh as a library (See: `vsh/api.py <https://github.com/brianbruggeman/vsh/tree/master/vsh/api.py>`_)
+* Something that actually worked on windows
+* No external dependencies (But see: `vsh/vendored <https://github.com/brianbruggeman/vsh/tree/master/vsh/vendored>`_)
 
 
 Installation
@@ -51,6 +54,14 @@ Create an ephemeral virtual environment::
     $ vsh -e VenvName
 
 
+To set a working folder for each subsequent vsh invocation::
+
+    $ vsh -w /path/to/my/repo VenvName
+    /path/to/my/repo (VenvName)$ exit
+
+    $ vsh VenvName
+    /path/to/my/repo (VenvName)$ ...
+
 More Commands
 ^^^^^^^^^^^^^
 
@@ -60,11 +71,25 @@ See Command Reference
 Environment Variables
 ---------------------
 
+The following environment variables are used:
+
 +---------------+--------------------+--------------------------------+
 | Name          | Default            | Description                    |
 +===============+====================+================================+
+| HOME          | $HOME              | Defines user's home (system)   |
++---------------+--------------------+--------------------------------+
+| PATH          | $PATH              | Defines executable locations   |
++---------------+--------------------+--------------------------------+
+| PROMPT        | $PROMPT            | ZSH prompt variable            |
++---------------+--------------------+--------------------------------+
+| PS1           | $PS1               | BASH/SH prompt variable        |
++---------------+--------------------+--------------------------------+
+| SHELL         | $SHELL             | Shell identification           |
++---------------+--------------------+--------------------------------+
 | WORKON_HOME   | $HOME/.virtualenvs | default, single path for venvs |
 +---------------+--------------------+--------------------------------+
+
+For more detail, see: `vsh/env.py <https://github.com/brianbruggeman/vsh/tree/master/vsh/env.py>`_
 
 
 Development
@@ -89,3 +114,5 @@ Run the tests to verify that the setup is complete (and the tests pass)::
 
 Please feel free to submit pull requests and file bugs using the
 issue tracker.
+
+.. _api: https://github.com/brianbruggeman/vsh/tree/master/vsh/api.py

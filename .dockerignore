@@ -28,10 +28,4 @@ provision/**/*
 docker-*.yml
 
 # Project
-requirements
-scripts
 doc
-tests
-tox.ini
-*.rst
-*.md

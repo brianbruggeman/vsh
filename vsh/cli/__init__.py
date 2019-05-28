@@ -1,1 +1,1 @@
-from .vsh import vsh
+from .vsh import vsh  # noqa

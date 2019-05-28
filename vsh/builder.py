@@ -1,3 +1,11 @@
+"""vsh.builder module
+
+Contains an extension to venv.EnvBuilder_ to control and handle the
+virtual environment build process.
+
+.. _venv.EnvBuilder https://docs.python.org/3/library/venv.html#venv.EnvBuilder
+
+"""
 import os
 import subprocess
 import sys
@@ -8,6 +16,8 @@ from typing import Optional
 
 
 class VenvBuilder(venv.EnvBuilder):
+    """Wraps venv.EnvBuilder to control creation.
+    """
 
     def create(self, env_dir: str, executable: Optional[str] = None):
         """
@@ -22,7 +32,7 @@ class VenvBuilder(venv.EnvBuilder):
         # See issue 24875. We need system_site_packages to be False
         # until after pip is installed.
         true_system_site_packages: bool = self.system_site_packages
-        self.system_site_packages: bool = False
+        self.system_site_packages: bool = False if os.name != 'nt' else self.system_site_packages
         self.create_configuration(context)
         self.setup_python(context)
         if self.with_pip:
@@ -84,9 +94,9 @@ class VenvBuilder(venv.EnvBuilder):
         create_if_needed(path)
         create_if_needed(libpath)
         # Issue 21197: create lib64 as a symlink to lib on 64-bit non-OS X POSIX
-        if (sys.maxsize > 2**32) and (os.name == 'posix') and (sys.platform != 'darwin'):
+        if (sys.maxsize > 2 ** 32) and (os.name == 'posix') and (sys.platform != 'darwin'):
             link_path = env_path / 'lib64'
-            if not link_path.exists():   # Issue #21643
+            if not link_path.exists():  # Issue #21643
                 os.symlink('lib', str(link_path))
         binpath = env_path / binname
         context.bin_path = str(binpath)
@@ -101,5 +111,8 @@ class VenvBuilder(venv.EnvBuilder):
         # environment vars, the current directory and anything else
         # intended for the global Python environment
         # Originally -Im, but -Esm works on both python2 and python3
-        cmd = [context.env_exe, '-Esm', 'ensurepip', '--upgrade', '--default-pip']
+        if Path(context.env_exe).exists():
+            cmd = [context.env_exe, '-Esm', 'ensurepip', '--upgrade', '--default-pip']
+        else:
+            cmd = [sys.executable, '-Esm', 'ensurepip', '--upgrade', '--default-pip']
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)

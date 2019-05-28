@@ -3,6 +3,7 @@
 ########################################################################
 # Put project ignores here
 .idea/
+pip
 
 ########################################################################
 #  Python
@@ -12,6 +13,7 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 *$py.class
+poetry.lock
 
 # C extensions
 *.so

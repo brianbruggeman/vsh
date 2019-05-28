@@ -16,14 +16,15 @@ class Counts:
         create: expected call count for vsh.api.create
         enter: expected call count for vsh.api.enter
         remove: expected call count for vsh.api.remove
-        show_envs: expected call count for vsh.api.show_envs
+        show_venvs: expected call count for vsh.api.show_venvs
         show_version: expected call count for vsh.api.show_version
 
     """
+
     create: int = 0
     enter: int = 0
     remove: int = 0
-    show_envs: int = 0
+    show_venvs: int = 0
     show_version: int = 0
 
     def check(self) -> Dict[str, bool]:
@@ -35,7 +36,7 @@ class Counts:
         counts = {
             method_name: getattr(vsh.api, method_name).call_count == expected_call_count
             for method_name, expected_call_count in asdict(self).items()
-            }
+        }
         return counts
 
     def mock_all(self, mocker, venv_path: Path, exit_code: int = 0):
@@ -49,7 +50,7 @@ class Counts:
         self.mock_create(mocker=mocker, venv_path=venv_path)
         self.mock_enter(mocker=mocker, exit_code=exit_code)
         self.mock_remove(mocker=mocker, venv_path=venv_path)
-        self.mock_show_envs(mocker=mocker)
+        self.mock_show_venvs(mocker=mocker)
         self.mock_show_version(mocker=mocker)
 
     def mock_create(self, mocker, venv_path: Path):
@@ -61,8 +62,8 @@ class Counts:
     def mock_remove(self, mocker, venv_path: Path):
         mocker.patch('vsh.api.remove', return_value=venv_path)
 
-    def mock_show_envs(self, mocker):
-        mocker.patch('vsh.api.show_envs')
+    def mock_show_venvs(self, mocker):
+        mocker.patch('vsh.api.show_venvs')
 
     def mock_show_version(self, mocker):
         mocker.patch('vsh.api.show_version')
@@ -78,6 +79,7 @@ class VshCliTestCase:
         counts: the call counts for each of the mocked api methods
 
     """
+
     command: str = ''
     exit_code: int = 0
     counts: Counts = field(default_factory=Counts)
@@ -93,25 +95,28 @@ class VshMultiCliTestCase:
         counts: the call counts for each of the mocked api methods
 
     """
+
     commands: List[str] = field(default_factory=list)
     exit_code: int = 0
     counts: Counts = field(default_factory=Counts)
 
 
-@pytest.mark.unit
-@pytest.mark.parametrize('test_case', [
-    VshCliTestCase(command='vsh', exit_code=1),
-    VshCliTestCase(command='vsh --help'),
-    VshCliTestCase(command='vsh -l', counts=Counts(show_envs=1)),
-    VshCliTestCase(command='vsh --list', counts=Counts(show_envs=1)),
-    VshCliTestCase(command='vsh -C test-vsh-cli', counts=Counts(create=1)),
-    VshCliTestCase(command='vsh test-vsh-cli echo "hi"', counts=Counts(create=1, enter=1)),
-    VshCliTestCase(command='vsh -r test-vsh-cli', counts=Counts(remove=1)),
-    VshCliTestCase(command='vsh -e --path ~/tmp/test-vsh-cli env', counts=Counts(create=1, enter=1, remove=1)),
-    VshCliTestCase(command='vsh --version', counts=Counts(show_version=1)),
-    VshCliTestCase(command='vsh --no-pip test-vsh-cli env', counts=Counts(create=1, enter=1)),
-    VshCliTestCase(command='vsh -C tmp-venv', counts=Counts(create=1)),
-    ])
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        VshCliTestCase(command='vsh', exit_code=1),
+        VshCliTestCase(command='vsh --help'),
+        VshCliTestCase(command='vsh -l', counts=Counts(show_venvs=1)),
+        VshCliTestCase(command='vsh --list', counts=Counts(show_venvs=1)),
+        VshCliTestCase(command='vsh -C test-vsh-cli', counts=Counts(create=1)),
+        VshCliTestCase(command='vsh test-vsh-cli echo "hi"', counts=Counts(create=1, enter=1)),
+        VshCliTestCase(command='vsh -r test-vsh-cli', counts=Counts(remove=1)),
+        VshCliTestCase(command='vsh -e --path ~/tmp/test-vsh-cli env', counts=Counts(create=1, enter=1, remove=1)),
+        VshCliTestCase(command='vsh --version', counts=Counts(show_version=1)),
+        VshCliTestCase(command='vsh --no-pip test-vsh-cli env', counts=Counts(create=1, enter=1)),
+        VshCliTestCase(command='vsh -C tmp-venv', counts=Counts(create=1)),
+    ],
+)
 def test_vsh_cli(workon_home, test_case, click_runner, mocker, venv_path):
     """Tests `vsh` command-line interface"""
     import vsh
@@ -137,13 +142,15 @@ def test_vsh_cli(workon_home, test_case, click_runner, mocker, venv_path):
     assert all(actual.values())
 
 
-@pytest.mark.parametrize('test_case', [
-    VshMultiCliTestCase(commands=[
-        'vsh test-vsh-cli echo "hi"',
-        'vsh -e test-vsh-cli echo "hi"',
-        ],
-        counts=Counts(create=2, enter=2, remove=1)),
-    ])
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        VshMultiCliTestCase(
+            commands=['vsh test-vsh-cli echo "hi"', 'vsh -e test-vsh-cli echo "hi"'],
+            counts=Counts(create=2, enter=2, remove=1),
+        )
+    ],
+)
 def test_vsh_cli_multi_command(test_case, click_runner, mocker, venv_path):
     """Tests `vsh` command-line interface with multiple lines"""
     import vsh

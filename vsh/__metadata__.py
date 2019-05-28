@@ -1,5 +1,5 @@
 import subprocess
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from textwrap import dedent
 from typing import Dict, Tuple
 
@@ -52,11 +52,14 @@ class PackageMetadata:
         vsh
 
     """
+
     name: str = 'vsh'  # PEP 508
+    version: str = '0.7.2'  # PEP 440
     package_name: str = field(init=False, repr=False, default='')
     title: str = 'Virtual Environment Shell'
     summary: str = f'Manager for python\'s virtual environments'
-    description: str = dedent(f"""\
+    description: str = dedent(
+        f"""\
     {summary}
 
     This cli-based package provides a mechanism to control virtual
@@ -67,9 +70,9 @@ class PackageMetadata:
     a fast and easy mechanism to create, enter and remove virtual
     environments with a low amount of typing.
 
-    """)
+    """
+    )
 
-    version: str = '0.7.1'  # PEP 440
     # These are set in post init
     major: int = field(init=False, repr=False, default=0)
     minor: int = field(init=False, repr=False, default=0)
@@ -95,32 +98,50 @@ class PackageMetadata:
         'Natural Language :: English',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3.7',
-        )
+    )
 
-    keywords: Tuple = (
-        'vsh', 'virtual environment', 'venv'
-        )
+    keywords: Tuple = ('vsh', 'virtual environment', 'venv')
 
     @property
     def setup(self) -> Dict:
         """Returns setup.py friendly fields and values"""
         # see: https://packaging.python.org/specifications/core-metadata/
-        required_fields = [
-            'metadata_version', 'name', 'version',
-            ]
+        required_fields = ['metadata_version', 'name', 'version']
         setup_friendly_fields = required_fields + [
-            'platform', 'supported_platform', 'summary', 'description',
-            'description_content_type', 'keywords', 'home_page', 'download_url',
-            'author', 'author_email', 'maintainer', 'maintainer_email',
-            'license', 'classifier', 'requires_dist', 'requires_python',
-            'requires_external', 'project_url', 'provides_extra',
-            'provides_dist', 'obsoletes_dist',
-
-
-            'long_description', 'license', 'version',
-            'author', 'author_email', 'maintainer', 'maintainer_email',
-            'copyright', 'license', 'url', 'classifiers', 'keywords'
-            ]
+            'platform',
+            'supported_platform',
+            'summary',
+            'description',
+            'description_content_type',
+            'keywords',
+            'home_page',
+            'download_url',
+            'author',
+            'author_email',
+            'maintainer',
+            'maintainer_email',
+            'license',
+            'classifier',
+            'requires_dist',
+            'requires_python',
+            'requires_external',
+            'project_url',
+            'provides_extra',
+            'provides_dist',
+            'obsoletes_dist',
+            'long_description',
+            'license',
+            'version',
+            'author',
+            'author_email',
+            'maintainer',
+            'maintainer_email',
+            'copyright',
+            'license',
+            'url',
+            'classifiers',
+            'keywords',
+        ]
         data = {}
         for key in self.__annotations__.keys():
             if key in setup_friendly_fields:

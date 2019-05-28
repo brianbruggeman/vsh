@@ -17,20 +17,21 @@ class EnterVenvTestCase:
         working: path to working dir
         expected: return code of command run
     """
+
     path: Union[Path, str] = field(default_factory=Path)
     command: Optional[Iterable] = None
     verbose: int = 0
     working: Optional[Union[Path, str]] = None
     expected_return_code: int = 0
-    expected_stdout: str = ''
-    expected_stderr: str = ''
+    expected_stdout: str = ""
+    expected_stderr: str = ""
 
     @property
     def kwds(self) -> Dict:
         kwds = asdict(self)
         keys_to_remove = []
         for key in kwds:
-            if key.startswith('expected'):
+            if key.startswith("expected"):
                 keys_to_remove.append(key)
         for key in keys_to_remove:
             kwds.pop(key)
@@ -40,10 +41,13 @@ class EnterVenvTestCase:
         self.path = Path(self.path)
 
 
-@pytest.mark.parametrize('test_case', [
-    EnterVenvTestCase(command=['env']),
-    EnterVenvTestCase(command=shlex.split('echo -n "hello, world"'), expected_stdout="hello, world"),
-    ])
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        EnterVenvTestCase(command=["env"]),
+        EnterVenvTestCase(command=shlex.split('echo -n "hello, world"'), expected_stdout="hello, world"),
+    ],
+)
 def test_api_enter(test_case, capfd, venv_path):
     """Tests build_vsh_rc_file properly creates a .vshrc
     """
@@ -54,10 +58,10 @@ def test_api_enter(test_case, capfd, venv_path):
     created_venv_path = create(path=tmp_venv_path, overwrite=True)
     assert created_venv_path.exists()
     kwds = test_case.kwds
-    kwds['path'] = created_venv_path
+    kwds["path"] = created_venv_path
 
     exit_code = enter(**kwds)
     assert exit_code == test_case.expected_return_code
     capture = capfd.readouterr()
     if test_case.expected_stdout:
-        assert capture.out == test_case.expected_stdout, f'{capture.out}'
+        assert capture.out == test_case.expected_stdout, f"{capture.out}"

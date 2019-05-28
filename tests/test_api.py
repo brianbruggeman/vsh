@@ -10,9 +10,8 @@ def touch(path, mode=0o666, dir_fd=None, **kwargs):
     flags = os.O_CREAT | os.O_APPEND
     with os.fdopen(os.open(path, flags=flags, mode=mode, dir_fd=dir_fd)) as f:
         os.utime(
-            f.fileno() if os.utime in os.supports_fd else str(path),
-            dir_fd=None if os.supports_fd else dir_fd, **kwargs
-            )
+            f.fileno() if os.utime in os.supports_fd else str(path), dir_fd=None if os.supports_fd else dir_fd, **kwargs
+        )
 
 
 def scan_tree(path):
@@ -38,15 +37,17 @@ def scan_tree(path):
             yield relative_path
 
 
-@pytest.mark.unit
-@pytest.mark.parametrize("name, error_name, check", [
-    # Just remove without pre-creating; an error should be raised with check=True
-    (None, 'InvalidEnvironmentError', True),
-    # Just remove without pre-creating; an error should not be raised with check=False
-    (None, None, False),
-    # Remove after creating
-    ('test-create', None, None),
-    ])
+@pytest.mark.parametrize(
+    'name, error_name, check',
+    [
+        # Just remove without pre-creating; an error should be raised with check=True
+        (None, 'InvalidEnvironmentError', True),
+        # Just remove without pre-creating; an error should not be raised with check=False
+        (None, None, False),
+        # Remove after creating
+        ('test-create', None, None),
+    ],
+)
 def test_remove(workon_home, venv_path, name, error_name, check):
     from vsh.api import create, remove
     from vsh import errors
@@ -69,19 +70,17 @@ def test_remove(workon_home, venv_path, name, error_name, check):
     assert not os.path.exists(path)
 
 
-@pytest.mark.unit
-def test_show_envs(venv_path, capfd):
-    from vsh.api import create, remove, show_envs
+def test_show_venvs(venv_path, capfd):
+    from vsh.api import create, remove, show_venvs
 
     create(path=venv_path)
     # must be a path that contains virtual environments
-    show_envs(path=venv_path.parent)
+    show_venvs(path=venv_path.parent)
     capture = capfd.readouterr()
     remove(path=venv_path)
     assert venv_path.name in capture.out
 
 
-@pytest.mark.unit
 def test_show_version(capfd):
     from vsh.api import show_version
     from vsh.__metadata__ import package_metadata
@@ -93,25 +92,29 @@ def test_show_version(capfd):
     assert version in out
 
 
-@pytest.mark.unit
-@pytest.mark.parametrize("structure, check, expected", [
-    # Nothing
-    ([], False, False),
-    # Valid
-    ([
-        'pyvenv.cfg',
-        'bin/activate',
-        'bin/activate.csh',
-        'bin/activate.fish',
-        'bin/python',
-        'bin/python3',
-        'bin/python3.6',
-        'include/foo',
-        'lib/python3.6/site-packages/bar',
-        ],
-        True,
-        True),
-    ])
+@pytest.mark.parametrize(
+    'structure, check, expected',
+    [
+        # Nothing
+        ([], False, False),
+        # Valid
+        (
+            [
+                'pyvenv.cfg',
+                'bin/activate',
+                'bin/activate.csh',
+                'bin/activate.fish',
+                'bin/python',
+                'bin/python3',
+                'bin/python3.6',
+                'include/foo',
+                'lib/python3.6/site-packages/bar',
+            ],
+            True,
+            True,
+        ),
+    ],
+)
 def test_validate_environment(venv_path, structure, check, expected):
     from vsh import api
 

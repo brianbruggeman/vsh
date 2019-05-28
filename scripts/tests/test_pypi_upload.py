@@ -14,14 +14,15 @@ class Counts:
         create: expected call count for vsh.api.create
         enter: expected call count for vsh.api.enter
         remove: expected call count for vsh.api.remove
-        show_envs: expected call count for vsh.api.show_envs
+        show_venvs: expected call count for vsh.api.show_venvs
         show_version: expected call count for vsh.api.show_version
 
     """
+
     create: int = 0
     enter: int = 0
     remove: int = 0
-    show_envs: int = 0
+    show_venvs: int = 0
     show_version: int = 0
 
     def check(self) -> Dict[str, bool]:
@@ -33,7 +34,7 @@ class Counts:
         counts = {
             method_name: getattr(vsh.api, method_name).call_count == expected_call_count
             for method_name, expected_call_count in asdict(self).items()
-            }
+        }
         return counts
 
     def mock_all(self, mocker, venv_path: Path, exit_code: int = 0):
@@ -47,23 +48,23 @@ class Counts:
         self.mock_create(mocker=mocker, venv_path=venv_path)
         self.mock_enter(mocker=mocker, exit_code=exit_code)
         self.mock_remove(mocker=mocker, venv_path=venv_path)
-        self.mock_show_envs(mocker=mocker)
+        self.mock_show_venvs(mocker=mocker)
         self.mock_show_version(mocker=mocker)
 
     def mock_create(self, mocker, venv_path: Path):
-        mocker.patch('vsh.api.create', return_value=venv_path)
+        mocker.patch("vsh.api.create", return_value=venv_path)
 
     def mock_enter(self, mocker, exit_code: int = 0):
-        mocker.patch('vsh.api.enter', return_value=exit_code)
+        mocker.patch("vsh.api.enter", return_value=exit_code)
 
     def mock_remove(self, mocker, venv_path: Path):
-        mocker.patch('vsh.api.remove', return_value=venv_path)
+        mocker.patch("vsh.api.remove", return_value=venv_path)
 
-    def mock_show_envs(self, mocker):
-        mocker.patch('vsh.api.show_envs')
+    def mock_show_venvs(self, mocker):
+        mocker.patch("vsh.api.show_venvs")
 
     def mock_show_version(self, mocker):
-        mocker.patch('vsh.api.show_version')
+        mocker.patch("vsh.api.show_version")
 
 
 # ######################################################################
@@ -77,13 +78,11 @@ class CleanupTestCase:
     @property
     def kwds(self):
         kwds = asdict(self)
-        kwds.pop('counts')
+        kwds.pop("counts")
         return kwds
 
 
-@pytest.mark.parametrize('test_case', [
-    CleanupTestCase(counts=Counts(remove=1))
-    ])
+@pytest.mark.parametrize("test_case", [CleanupTestCase(counts=Counts(remove=1))])
 def test_cleanup(test_case, venv_path, repo_path, mocker):
     import shutil  # noqa
     from ..pypi_upload import cleanup
@@ -92,7 +91,7 @@ def test_cleanup(test_case, venv_path, repo_path, mocker):
     test_case.repo_path = repo_path
 
     test_case.counts.mock_all(mocker=mocker, venv_path=venv_path)
-    mocker.patch('shutil.rmtree')
+    mocker.patch("shutil.rmtree")
     cleanup(**test_case.kwds)
 
     checked = test_case.counts.check()
@@ -109,13 +108,11 @@ class CreateDistTestCase:
     @property
     def kwds(self):
         kwds = asdict(self)
-        kwds.pop('counts')
+        kwds.pop("counts")
         return kwds
 
 
-@pytest.mark.parametrize('test_case', [
-    CreateDistTestCase(counts=Counts(enter=1))
-    ])
+@pytest.mark.parametrize("test_case", [CreateDistTestCase(counts=Counts(enter=1))])
 def test_create_distribution(test_case, venv_path, mocker):
     from ..pypi_upload import create_distribution
 
@@ -137,13 +134,11 @@ class FindMatchedGpgTestCase:
     @property
     def kwds(self):
         kwds = asdict(self)
-        kwds.pop('counts')
+        kwds.pop("counts")
         return kwds
 
 
-@pytest.mark.parametrize('test_case', [
-    FindMatchedGpgTestCase(),
-    ])
+@pytest.mark.parametrize("test_case", [FindMatchedGpgTestCase()])
 def test_find_matched_gpg(test_case, repo_path, venv_path, mocker):
     from ..pypi_upload import find_matched_gpg
 
@@ -167,17 +162,15 @@ class SetupVenvTestCase:
     @property
     def kwds(self):
         kwds = asdict(self)
-        kwds.pop('counts')
+        kwds.pop("counts")
         return kwds
 
 
-@pytest.mark.parametrize('test_case', [
-    SetupVenvTestCase(counts=Counts(create=1, enter=2))
-    ])
+@pytest.mark.parametrize("test_case", [SetupVenvTestCase(counts=Counts(create=1, enter=2))])
 def test_setup_venv(test_case, repo_path, venv_path, mocker):
     from ..pypi_upload import setup_venv
 
-    mocker.patch('shutil.rmtree')
+    mocker.patch("shutil.rmtree")
     test_case.repo_path = repo_path
 
     test_case.counts.mock_all(mocker=mocker, venv_path=venv_path)
@@ -197,13 +190,11 @@ class RunTestsTestCase:
     @property
     def kwds(self):
         kwds = asdict(self)
-        kwds.pop('counts')
+        kwds.pop("counts")
         return kwds
 
 
-@pytest.mark.parametrize('test_case', [
-    RunTestsTestCase(counts=Counts(enter=1))
-    ])
+@pytest.mark.parametrize("test_case", [RunTestsTestCase(counts=Counts(enter=1))])
 def test_run_tests(test_case, venv_path, mocker):
     from ..pypi_upload import run_tests
 
@@ -230,23 +221,36 @@ class UploadDistTestCase:
     @property
     def kwds(self):
         kwds = asdict(self)
-        kwds.pop('counts')
-        kwds.pop('matched_dist_file_path')
-        kwds.pop('matched_gpg_path')
+        kwds.pop("counts")
+        kwds.pop("matched_dist_file_path")
+        kwds.pop("matched_gpg_path")
         return kwds
 
 
-@pytest.mark.parametrize('test_case', [
-    UploadDistTestCase(matched_dist_file_path=Path('/tmp/dist-path'), matched_gpg_path=Path('/tmp/gpg_path'), prod=False, counts=Counts(enter=1)),
-    UploadDistTestCase(matched_dist_file_path=Path('/tmp/dist-path'), matched_gpg_path=Path('/tmp/gpg_path'), prod=True, counts=Counts(enter=1)),
-    ])
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        UploadDistTestCase(
+            matched_dist_file_path=Path("/tmp/dist-path"),
+            matched_gpg_path=Path("/tmp/gpg_path"),
+            prod=False,
+            counts=Counts(enter=1),
+        ),
+        UploadDistTestCase(
+            matched_dist_file_path=Path("/tmp/dist-path"),
+            matched_gpg_path=Path("/tmp/gpg_path"),
+            prod=True,
+            counts=Counts(enter=1),
+        ),
+    ],
+)
 def test_upload_distribution(test_case, repo_path, venv_path, mocker):
     from ..pypi_upload import find_matched_gpg, upload_distribution
 
     mocker.patch(
-        'scripts.pypi_upload.find_matched_gpg',
-        return_value=(test_case.matched_dist_file_path, test_case.matched_gpg_path)
-        )
+        "scripts.pypi_upload.find_matched_gpg",
+        return_value=(test_case.matched_dist_file_path, test_case.matched_gpg_path),
+    )
 
     test_case.venv_path = venv_path
     test_case.venv_path = repo_path

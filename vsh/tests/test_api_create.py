@@ -27,13 +27,14 @@ class CreateTestCase(TestParam):
         dry_run: setting to identify what might happen... typically for debug
 
     """
+
     site_packages: bool = False
     overwrite: bool = False
     symlinks: bool = False
     upgrade: bool = False
     include_pip: bool = False
-    prompt: str = ''
-    python: str = ''
+    prompt: str = ""
+    python: str = ""
     verbose: Union[int, bool] = False
     interactive: bool = False
     dry_run: bool = False
@@ -43,24 +44,27 @@ class CreateTestCase(TestParam):
         return asdict(self)
 
 
-@pytest.mark.unit
-@pytest.mark.parametrize("test_case", [
-    CreateTestCase(site_packages=True),
-    CreateTestCase(overwrite=True),
-    CreateTestCase(symlinks=True),
-    CreateTestCase(upgrade=True),
-    CreateTestCase(include_pip=True),
-    CreateTestCase(prompt='temp'),
-    # use current python3 with a <major>.<minor> version
-    CreateTestCase(python='.'.join(map(str, sys.version_info[0:2]))),
-    # simple python3
-    CreateTestCase(python='3'),
-    CreateTestCase(verbose=1),
-    CreateTestCase(interactive=True),
-    CreateTestCase(dry_run=True),
-    ])
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        CreateTestCase(site_packages=True),
+        CreateTestCase(overwrite=True),
+        CreateTestCase(symlinks=True),
+        CreateTestCase(upgrade=True),
+        CreateTestCase(include_pip=True),
+        CreateTestCase(prompt="temp"),
+        # use current python3 with a <major>.<minor> version
+        CreateTestCase(python=".".join(map(str, sys.version_info[0:2]))),
+        # simple python3
+        CreateTestCase(python="3"),
+        CreateTestCase(verbose=1),
+        CreateTestCase(interactive=True),
+        CreateTestCase(dry_run=True),
+    ],
+)
 def test_create(venv_path, test_case):
     from vsh import api
+
     # TODO: mock dry-runs and interactive behaviors
     test_case.interactive = False
     test_case.dry_run = False
@@ -80,9 +84,7 @@ def test_create(venv_path, test_case):
     expected_valid = True if not any([test_case.dry_run, test_case.upgrade]) else False
     assert api.validate_environment(expected_venv_path) is expected_valid
 
-    expected_structure = {
-        Path('bin/python'),
-        }
+    expected_structure = {Path("bin/python")}
 
     new_files = set(post_create_folder_structure) - set(pre_create_folder_structure)
     for path in expected_structure:

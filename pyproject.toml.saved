@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "vsh"
+version = "0.7.2"
+description = "A virtual environment management tool"
+homepage = "https://github.com/brianbruggeman/vsh"
+authors = ["Brian Bruggeman <1350114+brianbruggeman@users.noreply.github.com>"]
+maintainers = ["Brian Bruggeman <1350114+brianbruggeman@users.noreply.github.com>"]
+copyright = "2017-2019"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python",
+    "Natural Language :: English",
+    "Development Status :: 5 - Production/Stable",
+    "Natural Language :: English",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3.7",
+]
+keywords = [
+    "virtualenv",
+    "venv",
+    "virtual environment",
+    "vsh",
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+
+[tool.poetry.dev-dependencies]
+pytest = {version = "^4.6",extras = ["tests"]}
+pytest-mock = {version = "^1.10",extras = ["tests"]}
+pytest-flake8 = {version = "^1.0",extras = ["tests"]}
+pytest-xdist = {version = "^1.28",extras = ["tests"]}
+pytest-isort = {version = "^0.3.1",extras = ["tests"]}
+pytest-mypy = {version = "^0.3.2",extras = ["tests"]}
+pytest-coverage = {version = "^0.0.0",extras = ["tests"]}
+pytest-black = {version = "^0.3.7",extras = ["tests"]}
+
+[tool.black]
+line-length = 120
+target_version = ['py37']
+include = '\.pyi?$'
+skip-string-normalization = true
+exclude = '''
+(
+  /(
+    \.eggs
+  | \.git
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | build
+  | dist
+  )/
+  | setup.py
+  | vsh/vendored
+)
+'''
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+

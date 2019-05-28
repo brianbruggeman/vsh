@@ -2,6 +2,16 @@
 VERSIONS
 ========
 
+
+0.7.2
+-----
+- Updates click to 7.0
+- Updates colorama to 0.4.1
+- Updates toml to 0.10.0
+- Now correctly invokes .vshrc if present in the working folder
+- Updates windows support
+
+
 0.7.1
 -----
 - Bug fixes

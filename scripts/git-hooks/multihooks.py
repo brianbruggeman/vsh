@@ -6,7 +6,7 @@ import shlex
 import sys
 from subprocess import PIPE, Popen
 
-if sys.version.startswith('3'):
+if sys.version.startswith("3"):
     basestring = str
 
 
@@ -31,7 +31,7 @@ def run(command, env=None, buffer_size=None):
         process.stdout: sys.stdout,
         process.stderr: sys.stderr,
         # process.stdin: sys.stdin
-        }
+    }
     while should_run:
         try:
             selectables = select.select(filenos, filenos, filenos)
@@ -49,7 +49,7 @@ def run(command, env=None, buffer_size=None):
                     if rfd is None:
                         continue
                     for line in fd:
-                        yield rfd, line.decode('utf-8')
+                        yield rfd, line.decode("utf-8")
 
         if process.poll() is not None:
             should_run = False
@@ -58,7 +58,7 @@ def run(command, env=None, buffer_size=None):
 
 def execute_hooks():
     hook = os.path.abspath(sys.argv[0])
-    folder = hook + '.d'
+    folder = hook + ".d"
     if os.path.exists(folder) and os.path.isdir(folder):
         for root, folders, files in os.walk(folder):
             for filename in files:
@@ -72,6 +72,7 @@ def execute_hooks():
                         fd.write(line)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     exit(execute_hooks() or 0)

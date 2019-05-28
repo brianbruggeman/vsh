@@ -12,7 +12,7 @@ class BaseError(Exception):
     def __repr__(self):
         cname = type(self).__name__
         message = self.__msg__
-        return f'<{cname} {message}>'
+        return f"<{cname} {message}>"
 
     def __str__(self):
         return self.__msg__

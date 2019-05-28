@@ -1,18 +1,15 @@
 language: python
 
-python:
-  - "3.6"
-  - "nightly"
 
-matrix:
-  allow_failures:
-  - python: nightly
+services:
+  - docker
 
-install:
-  - python -m pip install -U pip
-  - python setup.py clean sdist bdist_wheel install
-  - pip install --upgrade --force .[tests]
 
 script:
-  - vsh --version
-  - python -m pytest --cache-clear -vvv -r a
+  - docker build -t vsh:test .
+  - docker images
+  - docker run --rm -it vsh:test vsh --version
+
+
+after_success:
+  - bash < (curl -s https://codecov.io/bash)

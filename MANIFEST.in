@@ -2,6 +2,7 @@
 include requirements.txt
 include entrypoints.txt
 include LICENSE
+include vsh/vendored/*.rst
 
 # Folders
 graft vsh

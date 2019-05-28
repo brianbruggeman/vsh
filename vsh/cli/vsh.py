@@ -1,16 +1,17 @@
-import atexit
-import os
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
 
-from vsh import api, terminal
+from vsh import api
+from vsh.env import env
 from vsh.errors import VenvNameError
-from vsh.vendored import click, colorama
+from vsh.vendored import click, termlog
 
-colorama.init()
-atexit.register(colorama.deinit)
+
+def get_venvs(ctx, args, incomplete):
+    folders = {name: path for name, path in sorted(api.find_environment_folders())}
+    venvs = {name for name in folders if incomplete in name}
+    return venvs
 
 
 @click.command(context_settings={'ignore_unknown_options': True, 'allow_interspersed_args': False})
@@ -20,7 +21,9 @@ atexit.register(colorama.deinit)
 @click.option('-e', '--ephemeral', is_flag=True, help='Create, enter and remove on vsh exit')
 @click.option('-f', '--force', is_flag=True, help='Force removal options')
 @click.option('-i', '--interactive', is_flag=True, help='Run interactively (debug)')
+@click.option('-j', '--json', is_flag=True, help='Log messages to stdout in json')
 @click.option('-l', '--list', 'ls', is_flag=True, help='Show available virtual environments')
+@click.option('-m', '--monochrome', is_flag=True, help='Log messages to stdout without color')
 @click.option('--no-pip', is_flag=True, help='Do not include pip')
 @click.option('-o', '--overwrite', is_flag=True, help='Overwrite existing virtual environment')
 @click.option('--path', metavar='PATH', help='Path to virtual environment', type=Path)
@@ -31,17 +34,13 @@ atexit.register(colorama.deinit)
 @click.option('-V', '--version', is_flag=True, help='Show version and exit')
 @click.option('-w', '--working', metavar='PATH', default=None, help=f'Default startup PATH when entering virtual environment', type=Path)
 @click.option('-W', '--ignore-working', 'ignore_working', is_flag=True, default=False, help=f'Ignore startup path when entering virtual environment [use: {Path.cwd()}]')
-@click.option('--shell-completion', is_flag=True, help='Show shell completion code')
-@click.argument('name', metavar='VENV_NAME', required=False)
+@click.argument('name', metavar='VENV_NAME', required=False, type=click.STRING, autocompletion=get_venvs)
 @click.argument('command', required=False, nargs=-1)
 @click.pass_context
-def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_completion, ls, no_pip, overwrite, path, python, remove, upgrade, verbose, version, name, command, working, ignore_working):
-    if shell_completion:
-        # Todo: fix bash/shell completion
-        subprocess.run('. vsh', shell=True)
-        exit(0)
+def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, json, ls, monochrome, no_pip, overwrite, path, python, remove, upgrade, verbose, version, name, command, working, ignore_working):
+    termlog.set_config(color=not monochrome, json=json, timestamp=False)
     if ls:
-        api.show_envs()
+        api.show_venvs(verbose=verbose)
         exit(0)
     elif version:
         api.show_version()
@@ -50,9 +49,9 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_co
         try:
             name, path = api.validate_venv_name_and_path(name=name, path=path)
         except VenvNameError:
-            terminal.echo(vsh.get_help(ctx))
-            terminal.echo(f'\n{terminal.red("Error")}: Missing {terminal.blue("name")} or {terminal.blue("path")}.\n')
-            exit()
+            termlog.echo(vsh.get_help(ctx))
+            termlog.echo(f'\n{termlog.red("Error")}: Missing {termlog.cyan("name")} or {termlog.cyan("path")}.\n')
+            exit(1)
     return_code = 0
 
     if path and name:
@@ -61,11 +60,9 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_co
         name = Path(path).name
 
     if not (path or name):
-        terminal.echo(vsh.get_help(ctx))
-        terminal.echo('\nERROR: A name or path must be provided.')
-        sys.tracebacklimit = 0
-        return_code = 1
-        exit(return_code)
+        termlog.echo(vsh.get_help(ctx))
+        termlog.echo(f'\n{termlog.red("Error")}: Missing {termlog.cyan("name")} or {termlog.cyan("path")}.\n')
+        exit(1)
 
     if not path:
         path = api.get_venv_home(name=name)
@@ -75,35 +72,53 @@ def vsh(ctx, copy, create_only, dry_run, ephemeral, force, interactive, shell_co
 
     # when no command exists, default to the shell itself
     if not command and not remove:
-        command = os.getenv('SHELL')
+        command = env.SHELL
 
     # when upgrade is requested, then perform upgrade
     if exists and upgrade:
-        api.upgrade(path, include_pip=not no_pip, overwrite=overwrite, symlinks=not copy, python=python, working=working, verbose=verbose - 1)
+        api.upgrade(
+            path,
+            include_pip=not no_pip,
+            overwrite=overwrite,
+            symlinks=not copy,
+            python=python,
+            working=working,
+            verbose=verbose - 1,
+        )
 
     elif not exists and not remove:
-        api.create(path, include_pip=not no_pip, overwrite=overwrite, symlinks=not copy, python=python, working=working, verbose=verbose - 1)
+        api.create(
+            path,
+            include_pip=not no_pip,
+            overwrite=overwrite,
+            symlinks=not copy,
+            python=python,
+            working=working,
+            verbose=verbose - 1,
+        )
         if ephemeral:
             remove = True
 
     if (sys.platform in ['win32'] or command) and not create_only:
-        return_code = api.enter(path, command, verbose=verbose - 1, working=working, ignore_working=ignore_working)
+        return_code = api.enter(path, command, verbose=verbose, working=working, ignore_working=ignore_working)
 
     if ephemeral and not (force or remove):
-        msg = textwrap.dedent(f"""\
+        msg = textwrap.dedent(
+            f'''\
 
-        {terminal.yellow("WARNING: Ephemeral option ignored. Aborting removal.")}
+        {termlog.yellow('WARNING: Ephemeral option ignored. Aborting removal.')}
 
-        Virtual environment "{terminal.green(name)}" existed previously.
+        Virtual environment '{termlog.green(name)}' existed previously.
         To remove, run:
 
-            {terminal.blue(f"vsh -r {name}")}
+            {termlog.cyan(f'vsh -r {name}')}
 
-        """)  # noqa
-        terminal.echo(msg)
+        '''
+        )  # noqa
+        termlog.echo(msg)
 
     if remove:
-        api.remove(path, verbose=verbose - 1, interactive=interactive, dry_run=dry_run)
+        api.remove(path, verbose=verbose, interactive=interactive, dry_run=dry_run)
 
     sys.tracebacklimit = 0
     exit(return_code)

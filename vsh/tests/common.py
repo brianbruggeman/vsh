@@ -18,7 +18,7 @@ def scan_tree(path: Path):
     for root, folders, files in os.walk(str(path)):
         relative_root = Path(root).relative_to(path)
         # Control traversal
-        folders[:] = [f for f in folders if f not in ['.git']]
+        folders[:] = [f for f in folders if f not in [".git"]]
         # Yield files
         for filename in files:
             relative_path = relative_root / filename
@@ -26,7 +26,6 @@ def scan_tree(path: Path):
 
 
 class EmulateSequence:
-
     def __len__(self):
         return len(self.__annotations__.keys())
 
@@ -36,7 +35,6 @@ class EmulateSequence:
 
 
 class EmulateMap:
-
     def keys(self):
         yield from self.__annotations__.keys()
 
@@ -50,12 +48,12 @@ class EmulateMap:
 
     def __getitem__(self, item):
         if item not in self.__annotations__.keys():
-            raise KeyError(f'Could not find {item}')
+            raise KeyError(f"Could not find {item}")
         return getattr(self, item)
 
     def __setitem__(self, key, value):
         if key not in self.__annotations__.keys():
-            raise KeyError(f'Could not find {key}')
+            raise KeyError(f"Could not find {key}")
         setattr(self, key, value)
 
 

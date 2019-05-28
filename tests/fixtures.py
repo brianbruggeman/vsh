@@ -1,13 +1,14 @@
 import os
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
+from vsh.vendored.click.testing import CliRunner
+
 
 @pytest.fixture(scope='function')
-def click_runner():
-    from vsh.vendored.click.testing import CliRunner
-
+def click_runner() -> Generator[CliRunner, None, None]:
     runner = CliRunner()
     yield runner
 
@@ -27,7 +28,7 @@ def package_version():
 
 
 @pytest.fixture(scope='function')
-def workon_home(tmpdir) -> Path:
+def workon_home(tmpdir) -> Generator[Path, None, None]:
     old_workon_home = os.environ.get('WORKON_HOME', '')
     # tmpdir is actually a LocalPath vs a PosixPath and for some reason
     # the api is not the same.
