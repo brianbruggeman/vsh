@@ -12,6 +12,7 @@ install:
   - python -m pip install -U pip
   - python setup.py clean sdist bdist_wheel install
   - pip install --upgrade --force .[tests]
+  - pip install .
 
 script:
   - vsh --version
