@@ -1,9 +1,8 @@
 ==========================
 vsh
 ==========================
-
-.. image:: https://img.shields.io/badge/Maintained%3F-yes-green.sv
-    :target: https://github.com/brianbruggeman/vsh/graphs/commit-activity
+.. image:: http://img.shields.io/badge/license-MIT-brightgreen.svg
+    :target: http://opensource.org/licenses/MIT
 
 .. image:: https://badge.fury.io/py/vsh.svg
     :target: https://pypi.python.org/pypi/vsh
