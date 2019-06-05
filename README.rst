@@ -2,6 +2,9 @@
 vsh
 ==========================
 
+.. image:: https://badge.fury.io/py/vsh.svg
+    :target: https://pypi.python.org/pypi/vsh
+
 .. image:: https://travis-ci.org/brianbruggeman/vsh.svg
     :target: https://travis-ci.org/brianbruggeman/vsh
 
