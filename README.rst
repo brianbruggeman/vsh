@@ -2,8 +2,15 @@
 vsh
 ==========================
 
+.. image:: http://img.shields.io/badge/license-MIT-brightgreen.svg
+    :target: http://opensource.org/licenses/MIT
+
+.. image:: https://badge.fury.io/py/vsh.svg
+    :target: https://pypi.python.org/pypi/vsh
+
 .. image:: https://travis-ci.org/brianbruggeman/vsh.svg
     :target: https://travis-ci.org/brianbruggeman/vsh
+
 
 A virtual environment shell
 
