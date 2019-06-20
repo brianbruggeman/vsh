@@ -1,5 +1,7 @@
+import datetime
 import subprocess
 from dataclasses import dataclass, field
+from pathlib import Path
 from textwrap import dedent
 from typing import Dict, Tuple
 
@@ -86,7 +88,7 @@ class PackageMetadata:
     maintainer: str = 'Brian Bruggeman'
     maintainer_email: str = 'brian.m.bruggeman@gmail.com'
 
-    copyright: str = f'2017-2018'
+    copyright: str = f'2017-{datetime.datetime.utcnow().date().year}'
     license: str = 'MIT'
 
     url: str = 'https://github.com/brianbruggeman/vsh'
@@ -168,7 +170,7 @@ class PackageMetadata:
         # In a development enviromment this will have access to git
         #  and it's possible to simply query the last hash value
         git_command = ('git', 'rev-parse', '--short', 'HEAD')
-        proc = subprocess.run(git_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.run(git_command, cwd=Path(__file__).parent, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode == 0:
             return proc.stdout.decode('utf-8').strip('\n')
 

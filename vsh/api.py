@@ -27,15 +27,18 @@ splash = f"""
        __      __    _     
        \ \    / /   | |    
         \ \  / /___ | |__  
-         \ \/ // __|| '_ \ 
+         \ \/ // __|| '_ \\
           \  / \__ \| | | |
            \/  |___/|_| |_|
                            
-       The Virtual Environment Shell
+     The Virtual Environment Shell
        
-         v{termlog.cyan(package_metadata.version)} [build: {termlog.grey(package_metadata.build)}]
+              v{termlog.cyan(package_metadata.version)}
                            
     """  # noqa: flake8 W291 W605 W293
+
+
+splash = f"the venv shell environment"
 
 
 def build_vsh_rc_file(venv_path: Path, working: Optional[Path] = None) -> Path:
@@ -146,7 +149,6 @@ def enter(path: Path, command: Optional[Iterable[str]] = None, verbose: int = 0,
     """
     with profiling.TimedExecutionBlock() as time:
         path = path.expanduser().resolve().absolute()
-        # termlog.echo(splash, verbose=verbose)
         vsh_config_path = find_vsh_config(name=path.name, check=False)
         if not vsh_config_path.exists():
             config = create_vsh_config(name=path.name, path=path, working=working, vsh_config_path=vsh_config_path)
@@ -166,8 +168,12 @@ def enter(path: Path, command: Optional[Iterable[str]] = None, verbose: int = 0,
         if os.name == 'nt':
             prompt = env.get('PROMPT')
             commands.append('clear')
-            commands.append(f'echo @\'\n{splash}\n\'@')
-            commands.append('function prompt { \"' + prompt + '\" }')
+            # TODO add splash
+            # for line in splash.split('\n'):
+            #     commands.append(f'echo `"\r {line} \r`"')
+            # commands.append(f'echo `"\n{splash}\n`" ')
+            # breakpoint()
+            commands.append("function prompt { " + f"'{prompt}';" + "}")
         for vshrc_path in find_vsh_rc_files(config.working_path):
             if os.name == 'nt':
                 if str(vshrc_path).startswith('\\\\') or ' ' in str(vshrc_path):
@@ -176,14 +182,28 @@ def enter(path: Path, command: Optional[Iterable[str]] = None, verbose: int = 0,
             commands.append(vshrc_command)
         if isinstance(command, (list, tuple)):
             command = ' '.join(command)
-        commands.append(f'{command}')
+        if not (os.name == 'nt' and command.lower() in ['powershell', 'powershell.exe']):
+            commands.append(f'{command}')
         interactive = '-i' if sys.stdout.isatty() else ''
         if os.name == 'nt':
-            shelled_command = f'{config.shell_path} -ExecutionPolicy Bypass -NoLogo -command "{"; ".join(commands)}"'
+            options = [
+                '-ExecutionPolicy', 'Bypass',
+                '-NoLogo',
+                '-NoProfile',
+                ]
+            if command.lower() in ['powershell', 'powershell.exe']:
+                options.append('-NoExit')
+            shelled_command = f'{config.shell_path} {" ".join(options)} -Command "{"; ".join(commands)}"'
+            termlog.echo(
+                f'Running in {termlog.cyan(config.venv_name)}: {termlog.green(shelled_command)}',
+                verbose=verbose
+                )
+            proc = subprocess.run(shelled_command, shell=True, cwd=cwd, env=env)
         else:
             shelled_command = f'{config.shell_path} {interactive} -c "{" && ".join(commands)}"'
-        termlog.echo(f'Running in {termlog.cyan(config.venv_name)}: {termlog.green(shelled_command)}', verbose=verbose)
-        proc = subprocess.run(shlex.split(shelled_command), cwd=cwd, env=env)
+            termlog.echo(f'Running in {termlog.cyan(config.venv_name)}: {termlog.green(shelled_command)}', verbose=verbose)
+            proc = subprocess.run(shlex.split(shelled_command), cwd=cwd, env=env)
+
         termlog.echo(f'Execution time: {time}', verbose=verbose)
         termlog.echo(
             f'Command return code: {termlog.green(str(proc.returncode)) if proc.returncode == 0 else termlog.red(str(proc.returncode))}',
@@ -635,11 +655,13 @@ def _update_prompt(config: VshConfig, env: Dict[str, Any]):
     disable_prompt = env.get('VIRTUAL_ENV_DISABLE_PROMPT') or None
     if not disable_prompt:
         if os.name == 'nt':
-            cmd = ['powershell.exe', '-Command', '\"(Get-Command Prompt).ScriptBlock\"']
-            proc = subprocess.run(' '.join(cmd), shell=True, capture_output=True)
-            prompt = proc.stdout.decode('utf-8')
-            prompt = '\n'.join([l.strip('"') for l in prompt.split('\n') if not l.strip().startswith('#') and l.strip()])
-            prompt = f'"{termlog.cyan(config.venv_name)} {prompt}'
+            default_prompt = f"{termlog.cyan(config.venv_name)} $(get-item env:PWD).Value>"
+            # cmd = ['powershell.exe', '-Command', '\"(Get-Command Prompt).ScriptBlock\"']
+            # proc = subprocess.run(' '.join(cmd), shell=True, capture_output=True)
+            # prompt = proc.stdout.decode('utf-8')
+            # prompt = '\n'.join([l for l in prompt.split('\n') if not l.strip().startswith('#') and l.strip()])
+            # prompt = f'{termlog.cyan(config.venv_name)} {prompt}'
+            prompt = default_prompt
             env['PROMPT'] = prompt
         else:
             shell = Path(env.get('SHELL') or '/bin/sh').name

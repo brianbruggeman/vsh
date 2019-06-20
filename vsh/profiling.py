@@ -38,7 +38,7 @@ class TimedExecutionBlock:
             return f'{duration:0.2f} {unit}'
         elif duration > 60.0:
             unit = 'sec'
-            for unit, interval in {'min': 60, 'hour': 60, 'days': 24, 'weeks': 7, 'years': 52}.items():
+            for unit, interval in {'sec': 60, 'min': 60, 'hour': 24}.items():
                 if duration >= interval:
                     duration = duration / interval
                 else:

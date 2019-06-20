@@ -1,4 +1,8 @@
+import datetime
+
 import pytest
+
+date = datetime.datetime.utcnow().date()
 
 
 @pytest.mark.parametrize(
@@ -11,7 +15,7 @@ import pytest
         ('author_email', 'brian.m.bruggeman@gmail.com'),
         ('maintainer', 'Brian Bruggeman'),
         ('maintainer_email', 'brian.m.bruggeman@gmail.com'),
-        ('copyright', '2017-2018'),
+        ('copyright', f'2017-{date.year}'),
         ('license', 'MIT'),
         ('url', 'https://github.com/brianbruggeman/vsh'),
         (

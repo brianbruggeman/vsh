@@ -93,7 +93,7 @@ class VshConfig:
                     if field_name.endswith("_path"):
                         value = self._load_path(value)
                     if value is None and field_name == "shell_path" and env.SHELL and os.name == "nt":
-                        value = Path(r"powershell.exe")
+                        value = Path("powershell")
                     setattr(self, field_name, value)
         return self
 
