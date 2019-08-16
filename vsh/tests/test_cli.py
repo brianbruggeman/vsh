@@ -119,7 +119,7 @@ class VshMultiCliTestCase:
 )
 def test_vsh_cli(workon_home, test_case, click_runner, mocker, venv_path):
     """Tests `vsh` command-line interface"""
-    import vsh
+    from vsh.__main__ import vsh
 
     test_case.counts.mock_all(mocker, venv_path=venv_path, exit_code=test_case.exit_code)
 
@@ -135,7 +135,7 @@ def test_vsh_cli(workon_home, test_case, click_runner, mocker, venv_path):
 
     command = shlex.split(test_case.command)[1:]
 
-    result = click_runner.invoke(vsh.cli.vsh, command)
+    result = click_runner.invoke(vsh, command)
     assert result.exit_code == test_case.exit_code
 
     actual = test_case.counts.check()
@@ -153,14 +153,14 @@ def test_vsh_cli(workon_home, test_case, click_runner, mocker, venv_path):
 )
 def test_vsh_cli_multi_command(test_case, click_runner, mocker, venv_path):
     """Tests `vsh` command-line interface with multiple lines"""
-    import vsh
+    from vsh.__main__ import vsh
 
     test_case.counts.mock_all(mocker, venv_path=venv_path, exit_code=test_case.exit_code)
 
     for command in test_case.commands:
         command = shlex.split(command)[1:]
 
-        result = click_runner.invoke(vsh.cli.vsh, command)
+        result = click_runner.invoke(vsh, command)
         assert result.exit_code == 0, result.stdout
 
     actual = test_case.counts.check()

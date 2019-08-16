@@ -112,7 +112,6 @@ class PackageMetadata:
         setup_friendly_fields = required_fields + [
             'platform',
             'supported_platform',
-            'summary',
             'description',
             'description_content_type',
             'keywords',
@@ -138,7 +137,6 @@ class PackageMetadata:
             'author_email',
             'maintainer',
             'maintainer_email',
-            'copyright',
             'license',
             'url',
             'classifiers',
@@ -148,6 +146,8 @@ class PackageMetadata:
         for key in self.__annotations__.keys():
             if key in setup_friendly_fields:
                 value = getattr(self, key)
+                if key in ['classifiers', 'keywords']:
+                    value = list(value)
                 data[key] = value
         return data
 

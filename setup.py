@@ -16,13 +16,8 @@ import sys
 from pathlib import Path
 
 from setuptools import Command, setup
+import pip._internal.req as req
 
-try:
-    # pip10+
-    import pip._internal.req as req
-except ImportError:
-    # pip9
-    import pip.req as req
 
 required_python_version = (3, 7)
 if sys.version_info < required_python_version:
