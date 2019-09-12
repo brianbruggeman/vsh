@@ -44,7 +44,7 @@ RUN echo "---------- Creating app base ------------" \
     git \
  && python setup.py clean \
  && pip install --upgrade pip \
- && pip install -e $APP_PATH \
+ && pip install $APP_PATH \
  && rm -f /var/cache/apk/* \
  && echo "---------- Finished app base ------------"
 

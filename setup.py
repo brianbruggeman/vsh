@@ -19,7 +19,7 @@ def main():
     repo_path = Path(__file__).parent
 
     modules = get_modules(package_metadata, repo_path)
-    packages = parse_packages(modules)
+    packages = [p for p in modules if not p.split('.')[-1] in ['tests', 'test']]
     requirements = load_package_requirements(packages, repo_path)
     entrypoints = get_package_entrypoints(repo_path)
 
