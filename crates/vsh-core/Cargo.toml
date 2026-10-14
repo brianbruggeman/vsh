@@ -10,6 +10,7 @@ authors.workspace = true
 conflaguration.workspace = true
 serde.workspace = true
 proxima-primitives.workspace = true
+toml.workspace = true
 
 [build-dependencies]
 conflaguration = { version = "2.0.0", features = ["derive", "codegen"] }
@@ -17,6 +18,7 @@ conflaguration = { version = "2.0.0", features = ["derive", "codegen"] }
 [dev-dependencies]
 temp-env.workspace = true
 serde_json.workspace = true
+tempfile = "3.27.0"
 
 [lints]
 workspace = true
