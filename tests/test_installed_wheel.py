@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+import pytest
+
 
 def test_installed_console_entry_reports_distribution_version():
     executable = Path(os.environ["VSH_TEST_EXECUTABLE"])
@@ -38,6 +40,47 @@ def test_installed_console_entry_reports_distribution_version():
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == version
+
+
+@pytest.mark.parametrize(
+    ("stdout_bytes", "stderr_bytes"),
+    [
+        (b"stdout without newline", b"stderr without newline"),
+        (b"stdout with newline\n", b"stderr with newline\n"),
+    ],
+)
+def test_installed_console_flushes_child_output_exactly(
+    tmp_path, stdout_bytes, stderr_bytes
+):
+    executable = Path(os.environ["VSH_TEST_EXECUTABLE"])
+    python = Path(os.environ["VSH_TEST_PYTHON"])
+    code = (
+        "import sys; "
+        f"sys.stdout.buffer.write({stdout_bytes!r}); "
+        f"sys.stderr.buffer.write({stderr_bytes!r}); "
+        "sys.exit(23)"
+    )
+    result = subprocess.run(
+        [
+            str(executable),
+            "enter",
+            "--name",
+            "demo",
+            "--venv-path",
+            str(tmp_path / "demo"),
+            "--working-path",
+            str(tmp_path),
+            "--shell",
+            str(python),
+            "--",
+            "-c",
+            code,
+        ],
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 23
+    assert (result.stdout, result.stderr) == (stdout_bytes, stderr_bytes)
 
 
 def test_installed_python_package_exposes_rust_api():

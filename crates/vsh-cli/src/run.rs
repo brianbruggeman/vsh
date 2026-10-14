@@ -3,6 +3,7 @@
 use std::ffi::OsString;
 use std::io::{self, Write};
 use std::path::PathBuf;
+use std::process::Output;
 
 use conflaguration::builder;
 use proxima_primitives::pipe::Pipe;
@@ -92,6 +93,35 @@ impl Pipe for RunActionPipe {
     }
 }
 
+/// Write child output to the process streams, flush both writers, and return
+/// the child's exit code. This pipe owns the stdio effect boundary so the CLI
+/// does not lose buffered bytes when the entrypoint exits immediately.
+#[derive(Debug, Clone, Copy, Default)]
+struct WriteOutputPipe;
+
+impl Pipe for WriteOutputPipe {
+    type In = Output;
+    type Out = i32;
+    type Err = conflaguration::Error;
+
+    fn call(
+        &self,
+        output: Self::In,
+    ) -> impl core::future::Future<Output = Result<Self::Out, Self::Err>> {
+        async move {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(&output.stdout)?;
+            stdout.flush()?;
+            drop(stdout);
+
+            let mut stderr = io::stderr().lock();
+            stderr.write_all(&output.stderr)?;
+            stderr.flush()?;
+            Ok(output.status.code().unwrap_or(1))
+        }
+    }
+}
+
 #[proxima_telemetry::instrument(err, level = "info")]
 async fn execute_action(action: CliAction, config: Config) -> Result<i32, conflaguration::Error> {
     match action {
@@ -156,8 +186,7 @@ async fn enter(config: Config, args: Vec<OsString>) -> Result<i32, conflaguratio
     ensure_effect(effect, Effect::None)?;
     let (_, effect) = transition(State::Active, Event::Exited).await;
     ensure_effect(effect, Effect::None)?;
-    write_output(&output.stdout, &output.stderr);
-    Ok(output.status.code().unwrap_or(1))
+    Pipe::call(&WriteOutputPipe, output).await
 }
 
 async fn create_and_enter(
@@ -210,8 +239,7 @@ async fn create_and_enter(
     Pipe::call(&RemoveVenvPipe, (config, false)).await?;
     let (_, effect) = transition(state, Event::Removed).await;
     ensure_effect(effect, Effect::None)?;
-    write_output(&output.stdout, &output.stderr);
-    Ok(output.status.code().unwrap_or(1))
+    Pipe::call(&WriteOutputPipe, output).await
 }
 
 async fn transition(state: State, event: Event) -> (State, Effect) {
@@ -253,11 +281,6 @@ fn after_separator(args: Vec<OsString>) -> Vec<OsString> {
         Some(index) => args.into_iter().skip(index + 1).collect(),
         None => args,
     }
-}
-
-fn write_output(stdout: &[u8], stderr: &[u8]) {
-    let _ = io::stdout().write_all(stdout);
-    let _ = io::stderr().write_all(stderr);
 }
 
 fn validation_error(field: &str, message: &str) -> conflaguration::Error {
