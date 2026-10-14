@@ -15,6 +15,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 temp-env = "0.3.6"
 serde_json = "1.0.149"
 proxima-primitives = { git = "https://github.com/brianbruggeman/proxima", rev = "875e56d366083f6fea4128626eb546a6269931db", default-features = false }
+proxima-telemetry = { git = "https://github.com/brianbruggeman/proxima", rev = "875e56d366083f6fea4128626eb546a6269931db", default-features = false, features = ["std", "emit", "macros"] }
 toml = "0.8.23"
 
 [workspace.lints.rust]

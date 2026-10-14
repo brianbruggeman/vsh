@@ -2,6 +2,7 @@
 
 mod cli_config;
 mod run;
+mod telemetry;
 
 use std::ffi::OsString;
 
@@ -9,6 +10,7 @@ use proxima_primitives::pipe::Pipe;
 
 pub use cli_config::{ParseConfigFlagsPipe, ResolveConfigPipe};
 pub use run::{ParseCreateOptionsPipe, RunActionPipe};
+pub use telemetry::{DrainTelemetryPipe, InstallTelemetryPipe, ResolveTelemetryConfigPipe};
 
 /// One selected top-level command. The enum makes the mutually exclusive
 /// command choice explicit while retaining command arguments as OS strings.
@@ -21,6 +23,18 @@ pub enum CliAction {
     Create(Vec<OsString>),
     Enter(Vec<OsString>),
     Remove(Vec<OsString>),
+}
+
+#[cfg(test)]
+pub(crate) fn ready<F: core::future::Future>(future: F) -> F::Output {
+    use core::task::{Context, Poll, Waker};
+
+    let mut context = Context::from_waker(Waker::noop());
+    let mut future = core::pin::pin!(future);
+    match future.as_mut().poll(&mut context) {
+        Poll::Ready(value) => value,
+        Poll::Pending => panic!("CLI configuration pipe must be immediately ready"),
+    }
 }
 
 /// Parse arguments excluding argv[0].

@@ -88,57 +88,61 @@ impl Pipe for RunActionPipe {
         &self,
         (action, config): Self::In,
     ) -> impl core::future::Future<Output = Result<Self::Out, Self::Err>> {
-        async move {
-            match action {
-                CliAction::List(_) => {
-                    let root = config.venv_path.parent().ok_or_else(|| {
-                        validation_error("venv_path", "must have a parent for list")
-                    })?;
-                    let paths = Pipe::call(&DiscoverVenvsPipe, root.to_path_buf())
-                        .await
-                        .expect("discovery pipe is infallible");
-                    for path in paths {
-                        println!("{}", path.display());
-                    }
-                    Ok(0)
+        execute_action(action, config)
+    }
+}
+
+#[proxima_telemetry::instrument(err, level = "info")]
+async fn execute_action(action: CliAction, config: Config) -> Result<i32, conflaguration::Error> {
+    match action {
+        CliAction::List(_) => {
+            let root = config
+                .venv_path
+                .parent()
+                .ok_or_else(|| validation_error("venv_path", "must have a parent for list"))?;
+            let paths = Pipe::call(&DiscoverVenvsPipe, root.to_path_buf())
+                .await
+                .expect("discovery pipe is infallible");
+            for path in paths {
+                println!("{}", path.display());
+            }
+            Ok(0)
+        }
+        CliAction::Create(args) => {
+            let (options, ephemeral, shell_args) =
+                Pipe::call(&ParseCreateOptionsPipe, args).await?;
+            if ephemeral {
+                create_and_enter(config, options, shell_args).await
+            } else {
+                if !shell_args.is_empty() {
+                    return Err(validation_error(
+                        "args",
+                        "shell arguments require --ephemeral",
+                    ));
                 }
-                CliAction::Create(args) => {
-                    let (options, ephemeral, shell_args) =
-                        Pipe::call(&ParseCreateOptionsPipe, args).await?;
-                    if ephemeral {
-                        create_and_enter(config, options, shell_args).await
-                    } else {
-                        if !shell_args.is_empty() {
-                            return Err(validation_error(
-                                "args",
-                                "shell arguments require --ephemeral",
-                            ));
-                        }
-                        let (state, effect) = transition(State::Absent, Event::Create).await;
-                        ensure_effect(effect, Effect::Create)?;
-                        Pipe::call(&CreateVenvPipe, (config, options)).await?;
-                        let (_, effect) = transition(state, Event::Created).await;
-                        ensure_effect(effect, Effect::None)?;
-                        Ok(0)
-                    }
-                }
-                CliAction::Enter(args) => enter(config, args).await,
-                CliAction::Remove(args) => {
-                    let dry_run = args.iter().any(|arg| arg == "--dry-run");
-                    if dry_run {
-                        Pipe::call(&RemoveVenvPipe, (config, true)).await?;
-                        return Ok(0);
-                    }
-                    let (_, effect) = transition(State::Ready, Event::Remove).await;
-                    ensure_effect(effect, Effect::Remove)?;
-                    Pipe::call(&RemoveVenvPipe, (config, dry_run)).await?;
-                    let (_, effect) = transition(State::Removing, Event::Removed).await;
-                    ensure_effect(effect, Effect::None)?;
-                    Ok(0)
-                }
-                _ => Ok(0),
+                let (state, effect) = transition(State::Absent, Event::Create).await;
+                ensure_effect(effect, Effect::Create)?;
+                Pipe::call(&CreateVenvPipe, (config, options)).await?;
+                let (_, effect) = transition(state, Event::Created).await;
+                ensure_effect(effect, Effect::None)?;
+                Ok(0)
             }
         }
+        CliAction::Enter(args) => enter(config, args).await,
+        CliAction::Remove(args) => {
+            let dry_run = args.iter().any(|arg| arg == "--dry-run");
+            if dry_run {
+                Pipe::call(&RemoveVenvPipe, (config, true)).await?;
+                return Ok(0);
+            }
+            let (_, effect) = transition(State::Ready, Event::Remove).await;
+            ensure_effect(effect, Effect::Remove)?;
+            Pipe::call(&RemoveVenvPipe, (config, dry_run)).await?;
+            let (_, effect) = transition(State::Removing, Event::Removed).await;
+            ensure_effect(effect, Effect::None)?;
+            Ok(0)
+        }
+        _ => Ok(0),
     }
 }
 

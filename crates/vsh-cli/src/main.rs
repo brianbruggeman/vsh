@@ -3,9 +3,11 @@ use core::task::{Context, Poll, Waker};
 use std::ffi::OsString;
 
 use proxima_primitives::pipe::{Pipe, PipeExt};
+use proxima_telemetry::error;
 use vsh_cli::{
-    CliAction, CompleteCommandsPipe, HelpPipe, ParseArgsPipe, ParseConfigFlagsPipe,
-    ResolveConfigPipe, RunActionPipe,
+    CliAction, CompleteCommandsPipe, DrainTelemetryPipe, HelpPipe, InstallTelemetryPipe,
+    ParseArgsPipe, ParseConfigFlagsPipe, ResolveConfigPipe, ResolveTelemetryConfigPipe,
+    RunActionPipe,
 };
 
 fn ready<F: Future>(future: F) -> F::Output {
@@ -51,18 +53,31 @@ fn main() {
 }
 
 fn run_configured(args: Vec<OsString>, action: fn(Vec<OsString>) -> CliAction) -> i32 {
+    let telemetry = ResolveTelemetryConfigPipe.and_then(InstallTelemetryPipe);
+    let recorder = match ready(telemetry.call(())) {
+        Ok(recorder) => recorder,
+        Err(error) => {
+            eprintln!("telemetry initialization failed: {error}");
+            return 2;
+        }
+    };
     let config_pipe = ParseConfigFlagsPipe.and_then(ResolveConfigPipe);
-    match ready(config_pipe.call(args)) {
+    let code = match ready(config_pipe.call(args)) {
         Ok((config, remaining)) => match ready(RunActionPipe.call((action(remaining), config))) {
             Ok(code) => code,
             Err(error) => {
+                error!(%error, "vsh action failed");
                 eprintln!("{error}");
                 2
             }
         },
         Err(error) => {
+            error!(%error, "vsh configuration failed");
             eprintln!("{error}");
             2
         }
-    }
+    };
+    let _drained =
+        ready(DrainTelemetryPipe.call(recorder)).expect("telemetry drain pipe is infallible");
+    code
 }
