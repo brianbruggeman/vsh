@@ -13,7 +13,7 @@ use crate::errors::config_error;
 #[pyclass(name = "Config", module = "vsh._vsh", from_py_object)]
 #[derive(Clone)]
 pub(crate) struct PyConfig {
-    inner: Config,
+    pub(crate) inner: Config,
 }
 
 #[pymethods]

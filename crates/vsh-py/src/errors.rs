@@ -14,3 +14,7 @@ create_exception!(
 pub(crate) fn config_error(error: impl std::fmt::Display) -> pyo3::PyErr {
     VshConfigError::new_err(error.to_string())
 }
+
+pub(crate) fn vsh_error(error: impl std::fmt::Display) -> pyo3::PyErr {
+    VshError::new_err(error.to_string())
+}

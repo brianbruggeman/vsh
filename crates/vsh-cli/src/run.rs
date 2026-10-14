@@ -7,8 +7,8 @@ use std::path::PathBuf;
 use conflaguration::builder;
 use proxima_primitives::pipe::Pipe;
 use vsh_core::{
-    Config, CreateOptions, CreateVenvPipe, DiscoverVenvsPipe, Effect, Event, LifecyclePipe,
-    RemoveVenvPipe, ShellPipe, State,
+    ChildEnvironmentPipe, Config, CreateOptions, CreateVenvPipe, DiscoverVenvsPipe, Effect, Event,
+    LifecyclePipe, RemoveVenvPipe, ShellPipe, State,
 };
 
 use crate::CliAction;
@@ -146,7 +146,7 @@ async fn enter(config: Config, args: Vec<OsString>) -> Result<i32, conflaguratio
     let (_, effect) = transition(State::Ready, Event::Enter).await;
     ensure_effect(effect, Effect::Enter)?;
     let args = after_separator(args);
-    let environment = child_environment(&config)?;
+    let environment = Pipe::call(&ChildEnvironmentPipe, config.clone()).await?;
     let output = Pipe::call(&ShellPipe, (config, args, environment)).await?;
     let (_, effect) = transition(State::Entering, Event::Entered).await;
     ensure_effect(effect, Effect::None)?;
@@ -182,7 +182,7 @@ async fn create_and_enter(
     let (state, effect) = transition(state, Event::Entered).await;
     ensure_effect(effect, Effect::None)?;
     let output = match async {
-        let environment = child_environment(&config)?;
+        let environment = Pipe::call(&ChildEnvironmentPipe, config.clone()).await?;
         Pipe::call(
             &ShellPipe,
             (config.clone(), after_separator(shell_args), environment),
@@ -248,41 +248,6 @@ fn after_separator(args: Vec<OsString>) -> Vec<OsString> {
     match args.iter().position(|arg| arg == "--") {
         Some(index) => args.into_iter().skip(index + 1).collect(),
         None => args,
-    }
-}
-
-fn child_environment(config: &Config) -> Result<Vec<(OsString, OsString)>, conflaguration::Error> {
-    let mut environment: Vec<_> = std::env::vars_os()
-        .filter(|(key, _)| !is_path_key(key))
-        .collect();
-    let path_key = if cfg!(windows) {
-        OsString::from("Path")
-    } else {
-        OsString::from("PATH")
-    };
-    let mut search_paths =
-        vec![
-            config
-                .venv_path
-                .join(if cfg!(windows) { "Scripts" } else { "bin" }),
-        ];
-    if let Some(path) = std::env::var_os(&path_key) {
-        search_paths.extend(std::env::split_paths(&path));
-    }
-    let path = std::env::join_paths(search_paths)
-        .map_err(|error| conflaguration::Error::Io(io::Error::other(error)))?;
-    environment.push((path_key, path));
-    Ok(environment)
-}
-
-fn is_path_key(key: &std::ffi::OsStr) -> bool {
-    #[cfg(windows)]
-    {
-        key.to_string_lossy().eq_ignore_ascii_case("PATH")
-    }
-    #[cfg(not(windows))]
-    {
-        key == "PATH"
     }
 }
 

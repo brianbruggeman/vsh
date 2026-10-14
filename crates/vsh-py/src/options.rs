@@ -13,6 +13,12 @@ pub(crate) struct PyCreateOptions {
     inner: CreateOptions,
 }
 
+impl PyCreateOptions {
+    pub(crate) fn into_inner(self) -> CreateOptions {
+        self.inner
+    }
+}
+
 #[pymethods]
 impl PyCreateOptions {
     #[new]
