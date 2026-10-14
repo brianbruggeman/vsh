@@ -5,8 +5,13 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+conflaguration.workspace = true
 vsh-core = { path = "../vsh-core" }
 proxima-primitives.workspace = true
+
+[dev-dependencies]
+temp-env.workspace = true
+tempfile = "3.27.0"
 
 [[bin]]
 name = "vsh"

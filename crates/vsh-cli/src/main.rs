@@ -2,8 +2,11 @@ use core::future::Future;
 use core::task::{Context, Poll, Waker};
 use std::process::ExitCode;
 
-use proxima_primitives::pipe::Pipe;
-use vsh_cli::{CliAction, CompleteCommandsPipe, HelpPipe, ParseArgsPipe};
+use proxima_primitives::pipe::{Pipe, PipeExt};
+use vsh_cli::{
+    CliAction, CompleteCommandsPipe, HelpPipe, ParseArgsPipe, ParseConfigFlagsPipe,
+    ResolveConfigPipe,
+};
 
 fn ready<F: Future>(future: F) -> F::Output {
     let mut context = Context::from_waker(Waker::noop());
@@ -27,9 +30,21 @@ fn main() -> ExitCode {
             println!("{}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }
-        Ok(CliAction::List) => {
-            eprintln!("environment listing requires resolved configuration");
-            ExitCode::from(2)
+        Ok(CliAction::List(args))
+        | Ok(CliAction::Create(args))
+        | Ok(CliAction::Enter(args))
+        | Ok(CliAction::Remove(args)) => {
+            let config_pipe = ParseConfigFlagsPipe.and_then(ResolveConfigPipe);
+            match ready(config_pipe.call(args)) {
+                Ok(_config) => {
+                    eprintln!("command effects are not available yet; run `vsh --help`");
+                    ExitCode::from(2)
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(2)
+                }
+            }
         }
         Ok(CliAction::Completion(prefix)) => {
             for command in
@@ -38,10 +53,6 @@ fn main() -> ExitCode {
                 println!("{command}");
             }
             ExitCode::SUCCESS
-        }
-        Ok(_) => {
-            eprintln!("command effects are not available yet; run `vsh --help`");
-            ExitCode::from(2)
         }
         Err(error) => {
             eprintln!("{error}");

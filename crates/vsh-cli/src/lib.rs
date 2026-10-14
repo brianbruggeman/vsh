@@ -1,8 +1,12 @@
 //! Pipe-shaped parsing and static CLI surface for vsh.
 
+mod cli_config;
+
 use std::ffi::OsString;
 
 use proxima_primitives::pipe::Pipe;
+
+pub use cli_config::{ParseConfigFlagsPipe, ResolveConfigPipe};
 
 /// One selected top-level command. The enum makes the mutually exclusive
 /// command choice explicit while retaining command arguments as OS strings.
@@ -10,7 +14,7 @@ use proxima_primitives::pipe::Pipe;
 pub enum CliAction {
     Help,
     Version,
-    List,
+    List(Vec<OsString>),
     Completion(OsString),
     Create(Vec<OsString>),
     Enter(Vec<OsString>),
@@ -38,7 +42,7 @@ impl Pipe for ParseArgsPipe {
             match command.to_str() {
                 Some("--help" | "-h" | "help") => Ok(CliAction::Help),
                 Some("--version" | "-V") => Ok(CliAction::Version),
-                Some("list") => Ok(CliAction::List),
+                Some("list") => Ok(CliAction::List(arguments)),
                 Some("completion") => Ok(CliAction::Completion(
                     arguments.into_iter().next().unwrap_or_default(),
                 )),
@@ -149,7 +153,7 @@ mod tests {
         );
         assert_eq!(
             ready(ParseArgsPipe.call(vec!["list".into()])).unwrap(),
-            CliAction::List
+            CliAction::List(Vec::new())
         );
         assert_eq!(
             ready(ParseArgsPipe.call(vec![
