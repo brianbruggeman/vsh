@@ -1,0 +1,27 @@
+name: Windows shell pipe
+
+on:
+  push:
+    branches: [main, 'cards/**']
+  pull_request:
+    paths:
+      - '.github/workflows/windows-shell.yml'
+      - 'crates/vsh-core/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  workflow_dispatch:
+
+jobs:
+  windows-shell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run native Windows shell pipe tests
+        run: >-
+          python scripts/card_gate.py --log target/card-logs/C21-windows.log
+          C21 -- cargo test -p vsh-core
+          shell_pipe_runs_native_windows_child_with_configured_cwd_and_status
