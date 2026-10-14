@@ -3,7 +3,7 @@
 Each estimate is an assumed wall-clock budget for implementation, checks, two
 reviews, postmortem, commit, and worktree → local `main` → `origin/main` landing.
 The limit is 20 minutes per card. Split a card if its observed work exceeds the
-limit; do not land a red checkpoint. Local total: **585 minutes (9h 45m)**,
+limit; do not land a red checkpoint. Local total: **621 minutes (10h 21m)**,
 revised from observed card duration after each landing. Remote CI and package
 index queues can add unknown external wait.
 
@@ -38,9 +38,11 @@ index queues can add unknown external wait.
 | C26 | Set Cargo, Python, persisted config, examples and changelog to 0.8.0; full green gates and wheel metadata. | C25,C29 | 15m |
 | C30 | Retain each green native 0.8.0 wheel as a workflow artifact named with exact source SHA and platform. | C26 | 15m planned |
 | C27 | Reconcile the release artifact provenance gate with retained native artifacts; review and split the remaining work into independently green cards. | C26,C30 | 18m |
-| C31 | Download exact-SHA native wheels, build same-SHA sdist, verify metadata/platform tags and source inventory, emit and independently recompute a four-file SHA-256 manifest. | C27 | 18m |
-| C32 | Re-run source test gate and final collision/hash checks; create and prove the local-only v0.8.0 tag at the C30 candidate SHA. | C31 | 18m |
-| C28 | Submit verified artifacts to GitHub release/PyPI and capture accepted receipts. If any upload/review exceeds 20m, split at a safe boundary. | C32 | 15m |
+| C31 | Verify the exact C30 candidate sdist inventory and retained wheels; close the checkpoint with a reviewed split when required tracked release inputs are absent. | C27 | 18m |
+| C33 | Configure the sdist to include README, changelog, and license; prove local inventory/metadata and wheel behavior, then retain a green native matrix for the new source SHA. | C31 | 18m |
+| C34 | Assemble the exact C33 SHA's three hosted wheels and sdist; validate metadata/tags/source inventory and independently recompute four SHA-256 rows. | C33 | 18m |
+| C32 | Re-run source test gate and final collision/hash checks; create and prove the local-only v0.8.0 tag at the C33 implementation source SHA proven by C34. | C34 | 18m |
+| C28 | Rehash and upload the exact four C34 files from the retained directory to GitHub release/PyPI; capture and compare accepted receipts. If any upload/review exceeds 20m, split at a safe boundary. | C32 | 15m |
 
 Package-index availability is an external verification milestone after C28,
 with an unknown wait; it is not included in the local ETA. Never claim the

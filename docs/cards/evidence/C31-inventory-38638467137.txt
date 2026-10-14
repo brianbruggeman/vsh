@@ -1,0 +1,112 @@
+C31 diagnostic inventory captured 2026-10-14T21:29:45Z
+source_sha=3c365a42186ee73afd1823da82482da8bbefd197
+native_run=38638467137
+source_sha_reachable_from_origin_main=True
+sdist=target/c31-dist/vsh-0.8.0.tar.gz
+sdist_version=0.8.0
+sdist_sha256_diagnostic_only=7d7494134bffb06949b3e7afbb385c9ce11f827b2a30343e36b160bb4da07d43 (not a release manifest; sdist is incomplete)
+expected_release_input_count=41
+actual_sdist_file_count=39
+
+Downloaded hosted wheels:
+  artifact=vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-macos-15; file_count=1; vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl; version=0.8.0; platform=macosx_11_0_arm64
+  artifact=vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-ubuntu-latest; file_count=1; vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl; version=0.8.0; platform=manylinux_2_39_x86_64
+  artifact=vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-windows-latest; file_count=1; vsh-0.8.0-cp39-abi3-win_amd64.whl; version=0.8.0; platform=win_amd64
+
+Expected tracked release inputs from git ls-tree:
+  CHANGES.rst
+  Cargo.lock
+  Cargo.toml
+  LICENSE
+  README.rst
+  crates/vsh-cli/Cargo.toml
+  crates/vsh-cli/src/application.rs
+  crates/vsh-cli/src/cli_config.rs
+  crates/vsh-cli/src/lib.rs
+  crates/vsh-cli/src/main.rs
+  crates/vsh-cli/src/run.rs
+  crates/vsh-cli/src/telemetry.rs
+  crates/vsh-cli/tests/actions.rs
+  crates/vsh-cli/tests/config.rs
+  crates/vsh-cli/tests/telemetry.rs
+  crates/vsh-core/Cargo.toml
+  crates/vsh-core/build.rs
+  crates/vsh-core/src/child_environment.rs
+  crates/vsh-core/src/config.rs
+  crates/vsh-core/src/config_file.rs
+  crates/vsh-core/src/create_venv.rs
+  crates/vsh-core/src/discovery.rs
+  crates/vsh-core/src/lib.rs
+  crates/vsh-core/src/lifecycle.rs
+  crates/vsh-core/src/limits.rs
+  crates/vsh-core/src/options.rs
+  crates/vsh-core/src/remove_venv.rs
+  crates/vsh-core/src/shell.rs
+  crates/vsh-core/src/venv_layout.rs
+  crates/vsh-core/tests/fixtures/invalid.cfg
+  crates/vsh-core/tests/fixtures/legacy-0.7.1.cfg
+  crates/vsh-core/tests/fixtures/legacy-0.7.2-stale-paths.cfg
+  crates/vsh-py/Cargo.toml
+  crates/vsh-py/build.rs
+  crates/vsh-py/src/config.rs
+  crates/vsh-py/src/errors.rs
+  crates/vsh-py/src/lib.rs
+  crates/vsh-py/src/options.rs
+  crates/vsh-py/src/venv.rs
+  pyproject.toml
+  python/vsh/__init__.py
+
+Actual sdist files after stripping vsh-0.8.0/ prefix:
+  Cargo.lock
+  Cargo.toml
+  PKG-INFO
+  crates/vsh-cli/Cargo.toml
+  crates/vsh-cli/src/application.rs
+  crates/vsh-cli/src/cli_config.rs
+  crates/vsh-cli/src/lib.rs
+  crates/vsh-cli/src/main.rs
+  crates/vsh-cli/src/run.rs
+  crates/vsh-cli/src/telemetry.rs
+  crates/vsh-cli/tests/actions.rs
+  crates/vsh-cli/tests/config.rs
+  crates/vsh-cli/tests/telemetry.rs
+  crates/vsh-core/Cargo.toml
+  crates/vsh-core/build.rs
+  crates/vsh-core/src/child_environment.rs
+  crates/vsh-core/src/config.rs
+  crates/vsh-core/src/config_file.rs
+  crates/vsh-core/src/create_venv.rs
+  crates/vsh-core/src/discovery.rs
+  crates/vsh-core/src/lib.rs
+  crates/vsh-core/src/lifecycle.rs
+  crates/vsh-core/src/limits.rs
+  crates/vsh-core/src/options.rs
+  crates/vsh-core/src/remove_venv.rs
+  crates/vsh-core/src/shell.rs
+  crates/vsh-core/src/venv_layout.rs
+  crates/vsh-core/tests/fixtures/invalid.cfg
+  crates/vsh-core/tests/fixtures/legacy-0.7.1.cfg
+  crates/vsh-core/tests/fixtures/legacy-0.7.2-stale-paths.cfg
+  crates/vsh-py/Cargo.toml
+  crates/vsh-py/build.rs
+  crates/vsh-py/src/config.rs
+  crates/vsh-py/src/errors.rs
+  crates/vsh-py/src/lib.rs
+  crates/vsh-py/src/options.rs
+  crates/vsh-py/src/venv.rs
+  pyproject.toml
+  python/vsh/__init__.py
+
+Missing tracked inputs (must be zero for release acceptance):
+  CHANGES.rst
+  LICENSE
+  README.rst
+
+Extra sdist members (only generated PKG-INFO is expected):
+  PKG-INFO
+
+Expected diagnostic assertions: PASS (41 tracked inputs; 39 actual; exactly three missing and one generated extra).
+Executed comparison assertions (rerun 2026-10-14T21:30:34Z): expected_count==41 and actual_count==39 -> PASS; missing=={CHANGES.rst, LICENSE, README.rst} -> PASS; extra=={PKG-INFO} -> PASS.
+Release manifest created: NO
+v0.8.0 tag created: NO
+Final collision sentinel check (2026-10-14T21:32:16Z): local `git tag --list v0.8.0` empty; remote `git ls-remote origin refs/tags/v0.8.0` empty.
