@@ -3,13 +3,33 @@ name: Native wheel matrix
 on:
   push:
     branches: [main, 'cards/**']
-  pull_request:
     paths:
       - '.github/workflows/native-wheels.yml'
+      - 'LICENSE'
       - 'crates/vsh-cli/**'
       - 'crates/vsh-core/**'
       - 'crates/vsh-py/**'
       - 'python/**'
+      - 'tests/conftest.py'
+      - 'tests/decorators.py'
+      - 'tests/fixtures.py'
+      - 'tests/test_installed_wheel.py'
+      - 'scripts/card_c24_matrix.py'
+      - 'scripts/card_gate.py'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'pyproject.toml'
+  pull_request:
+    paths:
+      - '.github/workflows/native-wheels.yml'
+      - 'LICENSE'
+      - 'crates/vsh-cli/**'
+      - 'crates/vsh-core/**'
+      - 'crates/vsh-py/**'
+      - 'python/**'
+      - 'tests/conftest.py'
+      - 'tests/decorators.py'
+      - 'tests/fixtures.py'
       - 'tests/test_installed_wheel.py'
       - 'scripts/card_c24_matrix.py'
       - 'scripts/card_gate.py'
