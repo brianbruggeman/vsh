@@ -1,0 +1,106 @@
+Commands and provenance:
+  git archive 0098dd7b2e51718d39cace370a7e7d75b4061227 | tar -x -C target/c34-source
+  (cd target/c34-source && uv build --sdist --out-dir ../c34-release-files)
+  (cd target/c34-release-files && shasum -a 256 *.whl *.tar.gz) > docs/cards/evidence/C34-sha256.txt
+  Independent digest verification: Python hashlib.sha256 over each basename listed in C34-sha256.txt; see C34-hash-verification.txt.
+
+source_sha=0098dd7b2e51718d39cace370a7e7d75b4061227
+hosted_run=38641518241 head_sha=0098dd7b2e51718d39cace370a7e7d75b4061227 conclusion=success
+jobs: linux/macOS/Windows all success, 4 installed-wheel tests each
+exact distribution file count=4; unique basenames=4
+distribution: vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl size=1977462
+distribution: vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl size=16595838
+distribution: vsh-0.8.0-cp39-abi3-win_amd64.whl size=1380452
+distribution: vsh-0.8.0.tar.gz size=43229
+wheel: vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl METADATA-Version=0.8.0 tags=['cp39-abi3-macosx_11_0_arm64']
+wheel: vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl METADATA-Version=0.8.0 tags=['cp39-abi3-manylinux_2_39_x86_64']
+wheel: vsh-0.8.0-cp39-abi3-win_amd64.whl METADATA-Version=0.8.0 tags=['cp39-abi3-win_amd64']
+sdist: vsh-0.8.0.tar.gz PKG-INFO-Version=0.8.0 expected=41 actual=42 missing=0 allowed_extra=['PKG-INFO']
+Expected tracked release inputs:
+CHANGES.rst
+Cargo.lock
+Cargo.toml
+LICENSE
+README.rst
+crates/vsh-cli/Cargo.toml
+crates/vsh-cli/src/application.rs
+crates/vsh-cli/src/cli_config.rs
+crates/vsh-cli/src/lib.rs
+crates/vsh-cli/src/main.rs
+crates/vsh-cli/src/run.rs
+crates/vsh-cli/src/telemetry.rs
+crates/vsh-cli/tests/actions.rs
+crates/vsh-cli/tests/config.rs
+crates/vsh-cli/tests/telemetry.rs
+crates/vsh-core/Cargo.toml
+crates/vsh-core/build.rs
+crates/vsh-core/src/child_environment.rs
+crates/vsh-core/src/config.rs
+crates/vsh-core/src/config_file.rs
+crates/vsh-core/src/create_venv.rs
+crates/vsh-core/src/discovery.rs
+crates/vsh-core/src/lib.rs
+crates/vsh-core/src/lifecycle.rs
+crates/vsh-core/src/limits.rs
+crates/vsh-core/src/options.rs
+crates/vsh-core/src/remove_venv.rs
+crates/vsh-core/src/shell.rs
+crates/vsh-core/src/venv_layout.rs
+crates/vsh-core/tests/fixtures/invalid.cfg
+crates/vsh-core/tests/fixtures/legacy-0.7.1.cfg
+crates/vsh-core/tests/fixtures/legacy-0.7.2-stale-paths.cfg
+crates/vsh-py/Cargo.toml
+crates/vsh-py/build.rs
+crates/vsh-py/src/config.rs
+crates/vsh-py/src/errors.rs
+crates/vsh-py/src/lib.rs
+crates/vsh-py/src/options.rs
+crates/vsh-py/src/venv.rs
+pyproject.toml
+python/vsh/__init__.py
+Actual normalized sdist members:
+CHANGES.rst
+Cargo.lock
+Cargo.toml
+LICENSE
+PKG-INFO
+README.rst
+crates/vsh-cli/Cargo.toml
+crates/vsh-cli/src/application.rs
+crates/vsh-cli/src/cli_config.rs
+crates/vsh-cli/src/lib.rs
+crates/vsh-cli/src/main.rs
+crates/vsh-cli/src/run.rs
+crates/vsh-cli/src/telemetry.rs
+crates/vsh-cli/tests/actions.rs
+crates/vsh-cli/tests/config.rs
+crates/vsh-cli/tests/telemetry.rs
+crates/vsh-core/Cargo.toml
+crates/vsh-core/build.rs
+crates/vsh-core/src/child_environment.rs
+crates/vsh-core/src/config.rs
+crates/vsh-core/src/config_file.rs
+crates/vsh-core/src/create_venv.rs
+crates/vsh-core/src/discovery.rs
+crates/vsh-core/src/lib.rs
+crates/vsh-core/src/lifecycle.rs
+crates/vsh-core/src/limits.rs
+crates/vsh-core/src/options.rs
+crates/vsh-core/src/remove_venv.rs
+crates/vsh-core/src/shell.rs
+crates/vsh-core/src/venv_layout.rs
+crates/vsh-core/tests/fixtures/invalid.cfg
+crates/vsh-core/tests/fixtures/legacy-0.7.1.cfg
+crates/vsh-core/tests/fixtures/legacy-0.7.2-stale-paths.cfg
+crates/vsh-py/Cargo.toml
+crates/vsh-py/build.rs
+crates/vsh-py/src/config.rs
+crates/vsh-py/src/errors.rs
+crates/vsh-py/src/lib.rs
+crates/vsh-py/src/options.rs
+crates/vsh-py/src/venv.rs
+pyproject.toml
+python/vsh/__init__.py
+C33-byte-identity: vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl sha256=9e07c8de83e3109c2e246d5bf9dc15501593224b2a5519e3d2cf3b313599aa98 PASS
+C33-byte-identity: vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl sha256=1bde65bd0ce328e71558a3fa5ece3d4dc981114043189a54c9ca5b1e0b02cb3c PASS
+C33-byte-identity: vsh-0.8.0-cp39-abi3-win_amd64.whl sha256=2e1a2798832a344618daa8f498411f2a83ef4b5339961f823fc37e830cd7eef0 PASS
