@@ -1,0 +1,10 @@
+C30 artifact download inspection (completed 2026-10-14 21:18:22Z, after the macOS upload at 21:17:52Z; run 38638467137; source 3c365a42186ee73afd1823da82482da8bbefd197)
+
+Downloaded artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-ubuntu-latest:
+  files=1; vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl; version=0.8.0; parsed platform=manylinux_2_39_x86_64
+Downloaded artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-windows-latest:
+  files=1; vsh-0.8.0-cp39-abi3-win_amd64.whl; version=0.8.0; parsed platform=win_amd64
+Downloaded artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-macos-15:
+  files=1; vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl; version=0.8.0; parsed platform=macosx_11_0_arm64
+
+Verification used Python packaging.utils.parse_wheel_filename; each artifact directory was recursively enumerated and asserted to contain exactly one .whl. All three assertions passed.

@@ -1,0 +1,18 @@
+windows-latest wheel	Build and test installed native wheel	2026-10-14T21:15:29.7198083Z 4 passed in 0.58s
+windows-latest wheel	Build and test installed native wheel	2026-10-14T21:15:29.7198654Z GREEN C24-windows: exit=0, reported passed=4; log=D:\a\vsh\vsh\target\card-logs\C24-windows.log
+windows-latest wheel	Select the single tested 0.8.0 wheel	2026-10-14T21:15:30.1880057Z Selected tested release wheel: D:\a\vsh\vsh\target\c24-wheels-094b55fccb1a488a9a84db3b00b41aab\vsh-0.8.0-cp39-abi3-win_amd64.whl
+windows-latest wheel	Retain tested release wheel	2026-10-14T21:15:30.5569499Z With the provided path, there will be 1 file uploaded
+windows-latest wheel	Retain tested release wheel	2026-10-14T21:15:32.2457742Z Artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-windows-latest.zip successfully finalized. Artifact ID 11928902837
+windows-latest wheel	Retain tested release wheel	2026-10-14T21:15:32.2459694Z Artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-windows-latest has been successfully uploaded! Final size is 1377593 bytes. Artifact ID is 11928902837
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T21:13:57.9632960Z 4 passed in 0.31s
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T21:13:57.9633601Z GREEN C24-linux: exit=0, reported passed=4; log=/home/runner/work/vsh/vsh/target/card-logs/C24-linux.log
+ubuntu-latest wheel	Select the single tested 0.8.0 wheel	2026-10-14T21:13:58.0134894Z Selected tested release wheel: /home/runner/work/vsh/vsh/target/c24-wheels-7e8c147b505b462caaf039e852e230da/vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl
+ubuntu-latest wheel	Retain tested release wheel	2026-10-14T21:13:58.2000414Z With the provided path, there will be 1 file uploaded
+ubuntu-latest wheel	Retain tested release wheel	2026-10-14T21:13:59.3948300Z Artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-ubuntu-latest.zip successfully finalized. Artifact ID 11929392286
+ubuntu-latest wheel	Retain tested release wheel	2026-10-14T21:13:59.3950981Z Artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-ubuntu-latest has been successfully uploaded! Final size is 16562537 bytes. Artifact ID is 11929392286
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:17:50.6239500Z 4 passed in 0.38s
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:17:50.6240050Z GREEN C24-darwin: exit=0, reported passed=4; log=/Users/runner/work/vsh/vsh/target/card-logs/C24-darwin.log
+macos-15 wheel	Select the single tested 0.8.0 wheel	2026-10-14T21:17:50.7700460Z Selected tested release wheel: /Users/runner/work/vsh/vsh/target/c24-wheels-f8b895fe7cad406c837782fcdf4995e5/vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl
+macos-15 wheel	Retain tested release wheel	2026-10-14T21:17:51.2143000Z With the provided path, there will be 1 file uploaded
+macos-15 wheel	Retain tested release wheel	2026-10-14T21:17:52.8315240Z Artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-macos-15.zip successfully finalized. Artifact ID 11929297841
+macos-15 wheel	Retain tested release wheel	2026-10-14T21:17:52.8318400Z Artifact vsh-0.8.0-3c365a42186ee73afd1823da82482da8bbefd197-macos-15 has been successfully uploaded! Final size is 1947812 bytes. Artifact ID is 11929297841
