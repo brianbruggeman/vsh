@@ -1,0 +1,13 @@
+[package]
+name = "vsh-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vsh-core = { path = "../vsh-core" }
+proxima-primitives.workspace = true
+
+[[bin]]
+name = "vsh"
+path = "src/main.rs"

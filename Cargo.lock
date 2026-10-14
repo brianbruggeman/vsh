@@ -877,6 +877,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
 [[package]]
+name = "vsh-cli"
+version = "0.8.0"
+dependencies = [
+ "proxima-primitives",
+ "vsh-core",
+]
+
+[[package]]
 name = "vsh-core"
 version = "0.8.0"
 dependencies = [
