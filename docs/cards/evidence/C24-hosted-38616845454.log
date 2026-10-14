@@ -1,0 +1,21 @@
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:47.8283006Z C24 platform=Windows wheel=vsh-0.8.0-cp39-abi3-win_amd64.whl compatible_tags=1
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:49.1747617Z installed metadata version: 0.8.0
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:49.1748563Z .isolated site-packages: D:\a\vsh\vsh\target\c24-venv-4e0fd6ab4f0b4c94a326c032df102d35\Lib\site-packages
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:49.1750760Z installed imports: D:\a\vsh\vsh\target\c24-venv-4e0fd6ab4f0b4c94a326c032df102d35\Lib\site-packages\vsh\__init__.py ; D:\a\vsh\vsh\target\c24-venv-4e0fd6ab4f0b4c94a326c032df102d35\Lib\site-packages\vsh\_vsh.pyd
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:49.1752898Z installed wheel source: D:\a\vsh\vsh\target\c24-wheels-4e0fd6ab4f0b4c94a326c032df102d35\vsh-0.8.0-cp39-abi3-win_amd64.whl
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:49.1755560Z 2 passed in 0.29s
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:41:49.1755977Z GREEN C24-windows: exit=0, reported passed=2; log=D:\a\vsh\vsh\target\card-logs\C24-windows.log
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:38.6376988Z C24 platform=Linux wheel=vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl compatible_tags=1
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:39.5751892Z installed metadata version: 0.8.0
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:39.5752988Z .isolated site-packages: /home/runner/work/vsh/vsh/target/c24-venv-0f7598aee7dc4845b16a6f7d665fb799/lib/python3.13/site-packages
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:39.5759988Z installed imports: /home/runner/work/vsh/vsh/target/c24-venv-0f7598aee7dc4845b16a6f7d665fb799/lib/python3.13/site-packages/vsh/__init__.py ; /home/runner/work/vsh/vsh/target/c24-venv-0f7598aee7dc4845b16a6f7d665fb799/lib/python3.13/site-packages/vsh/_vsh.abi3.so
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:39.5762445Z installed wheel source: /home/runner/work/vsh/vsh/target/c24-wheels-0f7598aee7dc4845b16a6f7d665fb799/vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:39.5767623Z 2 passed in 0.17s
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:39:39.5768286Z GREEN C24-linux: exit=0, reported passed=2; log=/home/runner/work/vsh/vsh/target/card-logs/C24-linux.log
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:09.8859090Z C24 platform=Darwin wheel=vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl compatible_tags=1
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:11.0414480Z installed metadata version: 0.8.0
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:11.0519370Z .isolated site-packages: /Users/runner/work/vsh/vsh/target/c24-venv-2ad6529415144be59219198856492aa2/lib/python3.13/site-packages
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:11.0636280Z installed imports: /Users/runner/work/vsh/vsh/target/c24-venv-2ad6529415144be59219198856492aa2/lib/python3.13/site-packages/vsh/__init__.py ; /Users/runner/work/vsh/vsh/target/c24-venv-2ad6529415144be59219198856492aa2/lib/python3.13/site-packages/vsh/_vsh.abi3.so
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:11.0873280Z installed wheel source: /Users/runner/work/vsh/vsh/target/c24-wheels-2ad6529415144be59219198856492aa2/vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:11.0880850Z 2 passed in 0.34s
+macos-15 wheel	Build and test installed native wheel	2026-10-14T18:50:11.0881830Z GREEN C24-darwin: exit=0, reported passed=2; log=/Users/runner/work/vsh/vsh/target/card-logs/C24-darwin.log

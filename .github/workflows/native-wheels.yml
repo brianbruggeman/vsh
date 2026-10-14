@@ -1,0 +1,59 @@
+name: Native wheel matrix
+
+on:
+  push:
+    branches: [main, 'cards/**']
+    paths:
+      - '.github/workflows/native-wheels.yml'
+      - 'LICENSE'
+      - 'crates/vsh-cli/**'
+      - 'crates/vsh-core/**'
+      - 'crates/vsh-py/**'
+      - 'python/**'
+      - 'tests/conftest.py'
+      - 'tests/decorators.py'
+      - 'tests/fixtures.py'
+      - 'tests/test_installed_wheel.py'
+      - 'scripts/card_c24_matrix.py'
+      - 'scripts/card_gate.py'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'pyproject.toml'
+  pull_request:
+    paths:
+      - '.github/workflows/native-wheels.yml'
+      - 'LICENSE'
+      - 'crates/vsh-cli/**'
+      - 'crates/vsh-core/**'
+      - 'crates/vsh-py/**'
+      - 'python/**'
+      - 'tests/conftest.py'
+      - 'tests/decorators.py'
+      - 'tests/fixtures.py'
+      - 'tests/test_installed_wheel.py'
+      - 'scripts/card_c24_matrix.py'
+      - 'scripts/card_gate.py'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+jobs:
+  native-wheel:
+    name: ${{ matrix.os }} wheel
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v6
+      - name: Install maturin
+        run: python -m pip install maturin packaging
+      - name: Build and test installed native wheel
+        run: python scripts/card_c24_matrix.py

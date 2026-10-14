@@ -1,8 +1,10 @@
 """Checks that must run against the isolated, installed maturin wheel."""
 
 import os
+import json
 import subprocess
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 
 def test_installed_console_entry_reports_distribution_version():
@@ -72,3 +74,14 @@ def test_installed_python_package_exposes_rust_api():
     assert len(paths) == 2, result.stdout
     assert all(path.is_relative_to(site_packages) for path in paths), paths
     print(f"installed imports: {paths[0]} ; {paths[1]}")
+    if wheel_path := os.environ.get("VSH_TEST_WHEEL"):
+        from importlib.metadata import distribution
+
+        direct_url = distribution("vsh").read_text("direct_url.json")
+        assert direct_url is not None
+        source = unquote(urlparse(json.loads(direct_url)["url"]).path)
+        if os.name == "nt" and len(source) > 2 and source[0] == "/" and source[2] == ":":
+            source = source[1:]
+        source_path = Path(source).resolve()
+        assert source_path == Path(wheel_path).resolve(), source_path
+        print(f"installed wheel source: {source_path}")
