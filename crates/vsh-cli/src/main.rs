@@ -1,11 +1,11 @@
 use core::future::Future;
 use core::task::{Context, Poll, Waker};
-use std::process::ExitCode;
+use std::ffi::OsString;
 
 use proxima_primitives::pipe::{Pipe, PipeExt};
 use vsh_cli::{
     CliAction, CompleteCommandsPipe, HelpPipe, ParseArgsPipe, ParseConfigFlagsPipe,
-    ResolveConfigPipe,
+    ResolveConfigPipe, RunActionPipe,
 };
 
 fn ready<F: Future>(future: F) -> F::Output {
@@ -17,46 +17,52 @@ fn ready<F: Future>(future: F) -> F::Output {
     }
 }
 
-fn main() -> ExitCode {
-    match ready(ParseArgsPipe.call(std::env::args_os().skip(1).collect())) {
+fn main() {
+    let code = match ready(ParseArgsPipe.call(std::env::args_os().skip(1).collect())) {
         Ok(CliAction::Help) => {
             print!(
                 "{}",
                 ready(HelpPipe.call(())).expect("infallible help pipe")
             );
-            ExitCode::SUCCESS
+            0
         }
         Ok(CliAction::Version) => {
             println!("{}", env!("CARGO_PKG_VERSION"));
-            ExitCode::SUCCESS
+            0
         }
-        Ok(CliAction::List(args))
-        | Ok(CliAction::Create(args))
-        | Ok(CliAction::Enter(args))
-        | Ok(CliAction::Remove(args)) => {
-            let config_pipe = ParseConfigFlagsPipe.and_then(ResolveConfigPipe);
-            match ready(config_pipe.call(args)) {
-                Ok(_config) => {
-                    eprintln!("command effects are not available yet; run `vsh --help`");
-                    ExitCode::from(2)
-                }
-                Err(error) => {
-                    eprintln!("{error}");
-                    ExitCode::from(2)
-                }
-            }
-        }
+        Ok(CliAction::List(args)) => run_configured(args, CliAction::List),
+        Ok(CliAction::Create(args)) => run_configured(args, CliAction::Create),
+        Ok(CliAction::Enter(args)) => run_configured(args, CliAction::Enter),
+        Ok(CliAction::Remove(args)) => run_configured(args, CliAction::Remove),
         Ok(CliAction::Completion(prefix)) => {
             for command in
                 ready(CompleteCommandsPipe.call(prefix)).expect("infallible completion pipe")
             {
                 println!("{command}");
             }
-            ExitCode::SUCCESS
+            0
         }
         Err(error) => {
             eprintln!("{error}");
-            ExitCode::from(2)
+            2
+        }
+    };
+    std::process::exit(code);
+}
+
+fn run_configured(args: Vec<OsString>, action: fn(Vec<OsString>) -> CliAction) -> i32 {
+    let config_pipe = ParseConfigFlagsPipe.and_then(ResolveConfigPipe);
+    match ready(config_pipe.call(args)) {
+        Ok((config, remaining)) => match ready(RunActionPipe.call((action(remaining), config))) {
+            Ok(code) => code,
+            Err(error) => {
+                eprintln!("{error}");
+                2
+            }
+        },
+        Err(error) => {
+            eprintln!("{error}");
+            2
         }
     }
 }

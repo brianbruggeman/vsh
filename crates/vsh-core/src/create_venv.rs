@@ -49,6 +49,17 @@ impl Pipe for CreateVenvPipe {
                 ));
             }
 
+            // Claim a new target before invoking Python. This makes cleanup
+            // after a failed ephemeral create ownership-safe and lets Python
+            // populate the already-created empty directory.
+            let reserved = !config.venv_path.exists();
+            if reserved {
+                if let Some(parent) = config.venv_path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::create_dir(&config.venv_path)?;
+            }
+
             let mut command = Command::new(interpreter);
             command.arg("-m").arg("venv");
             if options.site_packages {
@@ -72,8 +83,19 @@ impl Pipe for CreateVenvPipe {
                 .arg("--prompt")
                 .arg(options.prompt.as_deref().unwrap_or(&config.venv_name))
                 .arg(&config.venv_path);
-            let status = command.status()?;
+            let status = match command.status() {
+                Ok(status) => status,
+                Err(error) => {
+                    if reserved {
+                        let _ = std::fs::remove_dir_all(&config.venv_path);
+                    }
+                    return Err(error.into());
+                }
+            };
             if !status.success() {
+                if reserved {
+                    let _ = std::fs::remove_dir_all(&config.venv_path);
+                }
                 return Err(conflaguration::Error::Io(io::Error::other(format!(
                     "interpreter exited with status {status}"
                 ))));
@@ -86,6 +108,9 @@ impl Pipe for CreateVenvPipe {
             .await
             .expect("layout observation and validation are infallible");
             if !valid {
+                if reserved {
+                    let _ = std::fs::remove_dir_all(&config.venv_path);
+                }
                 return Err(validation_error(
                     "venv_path",
                     "interpreter completed but produced an invalid environment layout",

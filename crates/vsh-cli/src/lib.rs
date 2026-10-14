@@ -1,12 +1,14 @@
 //! Pipe-shaped parsing and static CLI surface for vsh.
 
 mod cli_config;
+mod run;
 
 use std::ffi::OsString;
 
 use proxima_primitives::pipe::Pipe;
 
 pub use cli_config::{ParseConfigFlagsPipe, ResolveConfigPipe};
+pub use run::{ParseCreateOptionsPipe, RunActionPipe};
 
 /// One selected top-level command. The enum makes the mutually exclusive
 /// command choice explicit while retaining command arguments as OS strings.

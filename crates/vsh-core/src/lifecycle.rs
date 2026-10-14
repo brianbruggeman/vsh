@@ -81,10 +81,10 @@ pub const fn transition(state: State, event: Event) -> (State, Effect) {
         (State::ActiveEphemeral, Event::Exited) => (State::Removing, Effect::Remove),
         (State::Removing, Event::Removed) => (State::Absent, Effect::None),
         (State::Creating | State::Entering, Event::Failed) => (State::Failed, Effect::None),
-        (
-            State::CreatingEphemeral | State::EnteringEphemeral | State::ActiveEphemeral,
-            Event::Failed,
-        ) => (State::CleaningEphemeralFailure, Effect::Remove),
+        (State::CreatingEphemeral, Event::Failed) => (State::Failed, Effect::None),
+        (State::EnteringEphemeral | State::ActiveEphemeral, Event::Failed) => {
+            (State::CleaningEphemeralFailure, Effect::Remove)
+        }
         (State::CleaningEphemeralFailure, Event::Removed) => (State::Failed, Effect::None),
         (State::Failed, Event::Remove) => (State::Removing, Effect::Remove),
         (State::Removing, Event::Failed) => (State::Failed, Effect::None),
@@ -167,7 +167,7 @@ mod tests {
         ),
         (
             (State::CreatingEphemeral, Event::Failed),
-            (State::CleaningEphemeralFailure, Effect::Remove),
+            (State::Failed, Effect::None),
         ),
         (
             (State::Entering, Event::Entered),

@@ -13,7 +13,7 @@ pub struct ParseConfigFlagsPipe;
 
 impl Pipe for ParseConfigFlagsPipe {
     type In = Vec<OsString>;
-    type Out = (Option<PathBuf>, Vec<(String, OsString)>);
+    type Out = (Option<PathBuf>, Vec<(String, OsString)>, Vec<OsString>);
     type Err = conflaguration::Error;
 
     fn call(
@@ -23,9 +23,16 @@ impl Pipe for ParseConfigFlagsPipe {
         async move {
             let mut config_file = None;
             let mut overrides = Vec::new();
+            let mut remaining = Vec::new();
             let mut arguments = arguments.into_iter();
             while let Some(argument) = arguments.next() {
+                if argument == "--" {
+                    remaining.push(argument);
+                    remaining.extend(arguments);
+                    break;
+                }
                 let Some(flag) = argument.to_str() else {
+                    remaining.push(argument);
                     continue;
                 };
                 let key = match flag {
@@ -36,7 +43,10 @@ impl Pipe for ParseConfigFlagsPipe {
                     "--working-path" => "working_path",
                     "--interpreter" => "interpreter_path",
                     "--shell" => "shell_path",
-                    _ => continue,
+                    _ => {
+                        remaining.push(argument);
+                        continue;
+                    }
                 };
                 let value = arguments
                     .next()
@@ -50,7 +60,7 @@ impl Pipe for ParseConfigFlagsPipe {
                     overrides.push((key.to_owned(), value));
                 }
             }
-            Ok((config_file, overrides))
+            Ok((config_file, overrides, remaining))
         }
     }
 }
@@ -66,13 +76,13 @@ fn config_error(field: &str, message: &str) -> conflaguration::Error {
 pub struct ResolveConfigPipe;
 
 impl Pipe for ResolveConfigPipe {
-    type In = (Option<PathBuf>, Vec<(String, OsString)>);
-    type Out = Config;
+    type In = (Option<PathBuf>, Vec<(String, OsString)>, Vec<OsString>);
+    type Out = (Config, Vec<OsString>);
     type Err = conflaguration::Error;
 
     fn call(
         &self,
-        (config_file, overrides): Self::In,
+        (config_file, overrides, remaining): Self::In,
     ) -> impl core::future::Future<Output = Result<Self::Out, Self::Err>> {
         async move {
             let mut builder = builder::<Config>().value(Config::default());
@@ -100,6 +110,7 @@ impl Pipe for ResolveConfigPipe {
                 })
                 .validate()
                 .build()
+                .map(|config| (config, remaining))
         }
     }
 }
@@ -137,20 +148,22 @@ mod tests {
                 "from-cli".into(),
             ];
             let input = ready(ParseConfigFlagsPipe.call(args)).expect("flags parse");
-            let config = ready(ResolveConfigPipe.call(input)).expect("layers resolve");
+            let (config, remaining) = ready(ResolveConfigPipe.call(input)).expect("layers resolve");
+            assert!(remaining.is_empty());
             assert_eq!(config.venv_name, "from-cli");
         });
 
         temp_env::with_var("VSH_VENV_NAME", Some("from-env"), || {
             let file = Some(config_path.clone());
-            let config = ready(ResolveConfigPipe.call((file, Vec::new())))
+            let (config, _) = ready(ResolveConfigPipe.call((file, Vec::new(), Vec::new())))
                 .expect("file and environment resolve");
             assert_eq!(config.venv_name, "from-env");
         });
 
         temp_env::with_var("VSH_VENV_NAME", None::<&str>, || {
-            let config = ready(ResolveConfigPipe.call((Some(config_path), Vec::new())))
-                .expect("file value resolves without env or flags");
+            let (config, _) =
+                ready(ResolveConfigPipe.call((Some(config_path), Vec::new(), Vec::new())))
+                    .expect("file value resolves without env or flags");
             assert_eq!(config.venv_name, "from-file");
         });
     }
@@ -170,11 +183,11 @@ mod tests {
     #[test]
     fn cli_config_rejects_missing_file_and_invalid_environment() {
         let missing = PathBuf::from("/this/vsh-config-file-does-not-exist.toml");
-        assert!(ready(ResolveConfigPipe.call((Some(missing), Vec::new()))).is_err());
+        assert!(ready(ResolveConfigPipe.call((Some(missing), Vec::new(), Vec::new()))).is_err());
 
         temp_env::with_var("VSH_VENV_NAME", Some(" "), || {
             assert!(matches!(
-                ready(ResolveConfigPipe.call((None, Vec::new()))),
+                ready(ResolveConfigPipe.call((None, Vec::new(), Vec::new()))),
                 Err(conflaguration::Error::Validation { .. })
             ));
         });
@@ -185,7 +198,7 @@ mod tests {
         let temp = tempfile::tempdir().expect("temporary directory");
         let malformed = temp.path().join("malformed.toml");
         std::fs::write(&malformed, "venv_name = [").unwrap();
-        assert!(ready(ResolveConfigPipe.call((Some(malformed), Vec::new()))).is_err());
+        assert!(ready(ResolveConfigPipe.call((Some(malformed), Vec::new(), Vec::new()))).is_err());
     }
 
     #[cfg(unix)]
@@ -196,7 +209,7 @@ mod tests {
             let path = OsString::from_vec(vec![b'/', b't', b'm', b'p', b'/', 0x80]);
             let parsed = ready(ParseConfigFlagsPipe.call(vec!["--shell".into(), path.clone()]))
                 .expect("path flag parses");
-            let config = ready(ResolveConfigPipe.call(parsed)).expect("config validates");
+            let (config, _) = ready(ResolveConfigPipe.call(parsed)).expect("config validates");
             assert_eq!(config.shell_path, PathBuf::from(path));
         });
     }
