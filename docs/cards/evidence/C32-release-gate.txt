@@ -24,3 +24,13 @@ push_command=git -c push.followTags=false push --no-follow-tags origin main
 local_main_equals_origin_main=true
 remote_tag_lookup_after_promotion=absent (git ls-remote --exit-code exit 2)
 checked_at_utc=2026-10-14T22:11:25Z
+
+Final closeout promotion
+closeout_commit=ad7e4e93484d8c9ffa53d2c2027210d66882589a
+windows_shell_run=38645930390 success
+windows_venv_run=38645930325 success
+promotion=branch -> local main -> origin main
+local_main_equals_origin_main=true
+post_promotion_remote_tag_lookup_exit=2 (absent)
+completed_at_utc=2026-10-14T22:14:21Z
+elapsed=12m02s from 2026-10-14T22:02:19Z
