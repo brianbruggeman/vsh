@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/vsh-core", "crates/vsh-cli"]
+members = ["crates/vsh-core", "crates/vsh-cli", "crates/vsh-py"]
 
 [workspace.package]
 version = "0.8.0"
