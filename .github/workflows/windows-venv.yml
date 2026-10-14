@@ -1,0 +1,28 @@
+name: Windows venv lifecycle
+
+on:
+  push:
+    branches: [main, 'cards/**']
+  pull_request:
+    paths:
+      - '.github/workflows/windows-venv.yml'
+      - 'crates/vsh-core/**'
+      - 'crates/vsh-cli/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  workflow_dispatch:
+
+jobs:
+  windows-venv:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run native Windows venv lifecycle test
+        run: >-
+          python scripts/card_gate.py --log target/card-logs/C22-windows.log
+          C22 -- cargo test -p vsh-cli --test actions
+          cli_windows_create_discover_enter_and_remove_real_venv_from_config

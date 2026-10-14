@@ -241,3 +241,90 @@ fn cli_enter_list_and_remove_use_configured_pipes() {
     );
     assert!(!venv.exists());
 }
+
+#[cfg(windows)]
+#[test]
+fn cli_windows_create_discover_enter_and_remove_real_venv_from_config() {
+    let temp = tempfile::tempdir().expect("temporary directory");
+    let venv = temp.path().join("native venv");
+    let config = temp.path().join("vsh-input.toml");
+    let sidecar = temp.path().join("native-vsh.cfg");
+    std::fs::write(&sidecar, "legacy vsh config").expect("write sidecar");
+    let sidecar_path = sidecar.to_string_lossy().replace('\\', "/");
+    std::fs::write(
+        &config,
+        format!(
+            "venv_name = 'native demo'\nvenv_path = 'ignored'\ninterpreter_path = 'python'\nshell_path = 'cmd.exe'\nvsh_config_path = '{sidecar_path}'\n"
+        ),
+    )
+    .expect("write TOML config");
+    let config = config.to_str().expect("Windows paths are Unicode");
+    let venv_path = venv.to_str().expect("Windows paths are Unicode");
+
+    let created = run_vsh(&["create", "--config", config, "--venv-path", venv_path]);
+    assert_eq!(
+        created.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&created.stderr)
+    );
+    assert!(venv.join("Scripts/python.exe").is_file());
+    assert!(venv.join("Include").is_dir());
+    assert!(venv.join("Lib/site-packages").is_dir());
+    assert!(venv.join("pyvenv.cfg").is_file());
+
+    let listed = run_vsh(&["list", "--config", config, "--venv-path", venv_path]);
+    assert_eq!(
+        listed.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&listed.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&listed.stdout)
+            .trim()
+            .to_ascii_lowercase(),
+        venv.display().to_string().to_ascii_lowercase()
+    );
+
+    let entered = run_vsh(&[
+        "enter",
+        "--config",
+        config,
+        "--venv-path",
+        venv_path,
+        "--",
+        "/C",
+        "echo \"%VIRTUAL_ENV%\" & echo \"%VSH_VENV_NAME%\" & exit /b 19",
+    ]);
+    assert_eq!(
+        entered.status.code(),
+        Some(19),
+        "{}",
+        String::from_utf8_lossy(&entered.stderr)
+    );
+    let entered_lines: Vec<_> = String::from_utf8_lossy(&entered.stdout)
+        .lines()
+        .map(str::trim)
+        .map(str::to_ascii_lowercase)
+        .collect();
+    assert_eq!(entered_lines.len(), 2, "enter output: {entered_lines:?}");
+    assert_eq!(
+        entered_lines[0].trim_matches('"'),
+        venv.display().to_string().to_ascii_lowercase()
+    );
+    assert_eq!(entered_lines[1], "\"native demo\"");
+
+    let removed = run_vsh(&["remove", "--config", config, "--venv-path", venv_path]);
+    assert_eq!(
+        removed.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&removed.stderr)
+    );
+    assert!(!venv.exists(), "remove must delete the created venv");
+    assert!(
+        !sidecar.exists(),
+        "remove must delete configured vsh sidecar"
+    );
+}
