@@ -34,6 +34,6 @@ jobs:
           python-version: '3.13'
       - uses: astral-sh/setup-uv@v6
       - name: Install maturin
-        run: python -m pip install maturin
+        run: python -m pip install maturin packaging
       - name: Build and test installed native wheel
         run: python scripts/card_c24_matrix.py

@@ -7,7 +7,11 @@ import os
 import platform
 import subprocess
 import sys
+import uuid
 from pathlib import Path
+
+from packaging.tags import sys_tags
+from packaging.utils import parse_wheel_filename
 
 from card_gate import run_card
 
@@ -20,7 +24,8 @@ def run(command: list[str], *, cwd: Path = ROOT) -> None:
 
 
 def main() -> int:
-    output = ROOT / "target" / "c24-wheels"
+    run_id = uuid.uuid4().hex
+    output = ROOT / "target" / f"c24-wheels-{run_id}"
     output.mkdir(parents=True, exist_ok=True)
     maturin = "maturin.exe" if os.name == "nt" else "maturin"
     run(
@@ -39,14 +44,15 @@ def main() -> int:
     if len(wheels) != 1:
         raise RuntimeError(f"expected exactly one wheel, found {wheels}")
     wheel = wheels[0]
-    tag = wheel.name.removesuffix(".whl").rsplit("-", 1)[-1]
+    _, _, _, wheel_tags = parse_wheel_filename(wheel.name)
+    compatible_tags = wheel_tags.intersection(sys_tags())
+    if not compatible_tags:
+        raise RuntimeError(f"wheel tags {wheel_tags} are unsupported by this runner")
+    if all(tag.platform == "any" for tag in wheel_tags):
+        raise RuntimeError(f"expected a native extension wheel, got tags {wheel_tags}")
     os_family = platform.system()
-    expected = {"Windows": "win_", "Darwin": "macosx_", "Linux": ("linux_", "manylinux")}[os_family]
-    expected_prefixes = (expected,) if isinstance(expected, str) else expected
-    if not tag.startswith(expected_prefixes):
-        raise RuntimeError(f"native wheel tag {tag!r} does not match {os_family}")
 
-    environment = ROOT / "target" / "c24-venv"
+    environment = ROOT / "target" / f"c24-venv-{run_id}"
     uv = "uv.exe" if os.name == "nt" else "uv"
     run([uv, "venv", "--python", sys.executable, str(environment)])
     scripts = environment / ("Scripts" if os.name == "nt" else "bin")
@@ -57,6 +63,7 @@ def main() -> int:
         {
             "VSH_TEST_PYTHON": str(python),
             "VSH_TEST_EXECUTABLE": str(executable),
+            "VSH_TEST_WHEEL": str(wheel),
         }
     )
     log = ROOT / "target" / "card-logs" / f"C24-{os_family.lower()}.log"
@@ -73,8 +80,8 @@ def main() -> int:
         "-rA",
         str(ROOT / "tests" / "test_installed_wheel.py"),
     ]
-    print(f"C24 platform={os_family} wheel={wheel.name} tag={tag}", flush=True)
-    return run_card(f"C24-{os_family.lower()}", command, log)
+    print(f"C24 platform={platform.system()} wheel={wheel.name} compatible_tags={len(compatible_tags)}", flush=True)
+    return run_card(f"C24-{platform.system().lower()}", command, log)
 
 
 if __name__ == "__main__":
