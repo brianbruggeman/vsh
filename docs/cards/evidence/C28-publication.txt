@@ -17,3 +17,29 @@ UV_PUBLISH_TOKEN/TWINE_PASSWORD/PYPI_TOKEN environment credentials: absent
 ~/.config/pypi/config: absent
 macOS Keychain services upload.pypi.org and pypi.org: no credential bytes
 Result: PyPI publication is split into C35; no PyPI upload attempted.
+
+Immediate pre-publication checks
+C34 manifest versus retained bytes: 4/4 exact basenames and SHA256 matches.
+Local tag v0.8.0^{commit}: 0098dd7b2e51718d39cace370a7e7d75b4061227.
+Exact tag source reachable from origin/main: yes.
+GitHub release collision: explicit HTTP 404, gh api exit 1.
+Remote v0.8.0 tag before release: absent, git ls-remote exit 2.
+PyPI 0.8.0: HTTP 404.
+
+GitHub publication receipt
+release_url=https://github.com/brianbruggeman/vsh/releases/tag/v0.8.0
+release_id=413236934
+tag=v0.8.0
+tag_target=0098dd7b2e51718d39cace370a7e7d75b4061227
+asset_count=4
+verified_at_utc=2026-10-14T22:24:36Z
+
+Asset receipts (GitHub API digest equals both C34 manifest and downloaded bytes)
+vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl asset_id=641863507 size=1977462 sha256=9e07c8de83e3109c2e246d5bf9dc15501593224b2a5519e3d2cf3b313599aa98
+vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl asset_id=641863508 size=16595838 sha256=1bde65bd0ce328e71558a3fa5ece3d4dc981114043189a54c9ca5b1e0b02cb3c
+vsh-0.8.0-cp39-abi3-win_amd64.whl asset_id=641863504 size=1380452 sha256=2e1a2798832a344618daa8f498411f2a83ef4b5339961f823fc37e830cd7eef0
+vsh-0.8.0.tar.gz asset_id=641863506 size=43229 sha256=c527d5c418e0965fe616821b9c77846dbc6387495bf1d8d86159d7a0a12f4de7
+
+PyPI outcome
+No upload attempted. Publisher auth is not configured on the host; C35 owns PyPI
+publication and index digest verification after local credential setup.
