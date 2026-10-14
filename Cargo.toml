@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = ["crates/vsh-core"]
+
+[workspace.package]
+version = "0.8.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/brianbruggeman/vsh"
+authors = ["Brian Bruggeman <1350114+brianbruggeman@users.noreply.github.com>"]
+
+[workspace.dependencies]
+conflaguration = { version = "2.0.0", features = ["derive", "toml"] }
+serde = { version = "1.0.229", features = ["derive"] }
+temp-env = "0.3.6"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
