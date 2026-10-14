@@ -7,7 +7,8 @@ name = "vsh"
 version = "0.8.0"
 description = "A Rust virtual environment manager with a Python API"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+readme = "README.rst"
+license = { file = "LICENSE" }
 
 [project.scripts]
 vsh = "vsh:main"
@@ -17,3 +18,4 @@ manifest-path = "crates/vsh-py/Cargo.toml"
 python-source = "python"
 module-name = "vsh._vsh"
 features = ["extension-module"]
+include = [{ path = "CHANGES.rst", format = "sdist" }]
