@@ -9,6 +9,7 @@ mod lifecycle;
 mod limits;
 mod options;
 mod remove_venv;
+mod shell;
 mod venv_layout;
 
 pub use config::Config;
@@ -19,4 +20,5 @@ pub use lifecycle::{Effect, Event, LifecyclePipe, State, transition};
 pub use limits::MAX_WALK_DEPTH;
 pub use options::{CreateOptions, EnterOptions};
 pub use remove_venv::RemoveVenvPipe;
+pub use shell::ShellPipe;
 pub use venv_layout::{ObserveVenvLayoutPipe, ValidateVenvLayoutPipe, VenvLayout};
