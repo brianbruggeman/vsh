@@ -1,0 +1,8 @@
+[package]
+name = "vsh-proxima-pipe-proof"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+proxima-primitives = { git = "https://github.com/brianbruggeman/proxima", rev = "875e56d366083f6fea4128626eb546a6269931db", default-features = false }
