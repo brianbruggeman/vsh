@@ -1634,6 +1634,7 @@ dependencies = [
  "proxima-primitives",
  "pyo3",
  "pyo3-build-config",
+ "vsh-cli",
  "vsh-core",
 ]
 

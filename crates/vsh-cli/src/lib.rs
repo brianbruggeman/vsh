@@ -1,5 +1,6 @@
 //! Pipe-shaped parsing and static CLI surface for vsh.
 
+mod application;
 mod cli_config;
 mod run;
 mod telemetry;
@@ -8,6 +9,7 @@ use std::ffi::OsString;
 
 use proxima_primitives::pipe::Pipe;
 
+pub use application::run_args;
 pub use cli_config::{ParseConfigFlagsPipe, ResolveConfigPipe};
 pub use run::{ParseCreateOptionsPipe, RunActionPipe};
 pub use telemetry::{DrainTelemetryPipe, InstallTelemetryPipe, ResolveTelemetryConfigPipe};

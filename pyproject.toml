@@ -9,6 +9,9 @@ description = "A Rust virtual environment manager with a Python API"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 
+[project.scripts]
+vsh = "vsh:main"
+
 [tool.maturin]
 manifest-path = "crates/vsh-py/Cargo.toml"
 python-source = "python"
