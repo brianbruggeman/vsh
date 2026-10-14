@@ -1,0 +1,30 @@
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:09.8402130Z 📦 Built wheel for abi3 Python ≥ 3.9 to /Users/runner/work/vsh/vsh/target/c24-wheels-be28581f3c9d4be7a896f357ee3000fa/vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.2619620Z C24 platform=Darwin wheel=vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl compatible_tags=1
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9563850Z installed metadata version: 0.8.0
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9565100Z .isolated site-packages: /Users/runner/work/vsh/vsh/target/c24-venv-be28581f3c9d4be7a896f357ee3000fa/lib/python3.13/site-packages
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9566620Z installed imports: /Users/runner/work/vsh/vsh/target/c24-venv-be28581f3c9d4be7a896f357ee3000fa/lib/python3.13/site-packages/vsh/__init__.py ; /Users/runner/work/vsh/vsh/target/c24-venv-be28581f3c9d4be7a896f357ee3000fa/lib/python3.13/site-packages/vsh/_vsh.abi3.so
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9570080Z installed wheel source: /Users/runner/work/vsh/vsh/target/c24-wheels-be28581f3c9d4be7a896f357ee3000fa/vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9575590Z PASSED ../../../../../dev::test_installed_console_entry_reports_distribution_version
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9576410Z PASSED ../../../../../dev::test_installed_python_package_exposes_rust_api
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9577190Z 2 passed in 0.22s
+macos-15 wheel	Build and test installed native wheel	2026-10-14T19:14:10.9577990Z GREEN C24-darwin: exit=0, reported passed=2; log=/Users/runner/work/vsh/vsh/target/card-logs/C24-darwin.log
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:41.9571545Z 📦 Built wheel for abi3 Python ≥ 3.9 to D:\a\vsh\vsh\target\c24-wheels-47cb3caee7f04663acabd4bd8c160f1d\vsh-0.8.0-cp39-abi3-win_amd64.whl
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:42.5366248Z C24 platform=Windows wheel=vsh-0.8.0-cp39-abi3-win_amd64.whl compatible_tags=1
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7039627Z installed metadata version: 0.8.0
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7041351Z .isolated site-packages: D:\a\vsh\vsh\target\c24-venv-47cb3caee7f04663acabd4bd8c160f1d\Lib\site-packages
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7043370Z installed imports: D:\a\vsh\vsh\target\c24-venv-47cb3caee7f04663acabd4bd8c160f1d\Lib\site-packages\vsh\__init__.py ; D:\a\vsh\vsh\target\c24-venv-47cb3caee7f04663acabd4bd8c160f1d\Lib\site-packages\vsh\_vsh.pyd
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7045540Z installed wheel source: D:\a\vsh\vsh\target\c24-wheels-47cb3caee7f04663acabd4bd8c160f1d\vsh-0.8.0-cp39-abi3-win_amd64.whl
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7047401Z PASSED \\.\nul::test_installed_console_entry_reports_distribution_version
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7047906Z PASSED \\.\nul::test_installed_python_package_exposes_rust_api
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7048269Z 2 passed in 0.29s
+windows-latest wheel	Build and test installed native wheel	2026-10-14T18:59:43.7048691Z GREEN C24-windows: exit=0, reported passed=2; log=D:\a\vsh\vsh\target\card-logs\C24-windows.log
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:24.2456999Z 📦 Built wheel for abi3 Python ≥ 3.9 to /home/runner/work/vsh/vsh/target/c24-wheels-60568c2a19d84363ad1087049b6d59af/vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:24.5489574Z C24 platform=Linux wheel=vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl compatible_tags=1
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3326592Z installed metadata version: 0.8.0
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3327572Z .isolated site-packages: /home/runner/work/vsh/vsh/target/c24-venv-60568c2a19d84363ad1087049b6d59af/lib/python3.13/site-packages
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3328849Z installed imports: /home/runner/work/vsh/vsh/target/c24-venv-60568c2a19d84363ad1087049b6d59af/lib/python3.13/site-packages/vsh/__init__.py ; /home/runner/work/vsh/vsh/target/c24-venv-60568c2a19d84363ad1087049b6d59af/lib/python3.13/site-packages/vsh/_vsh.abi3.so
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3330254Z installed wheel source: /home/runner/work/vsh/vsh/target/c24-wheels-60568c2a19d84363ad1087049b6d59af/vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3332485Z PASSED ../../../../../dev::test_installed_console_entry_reports_distribution_version
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3332968Z PASSED ../../../../../dev::test_installed_python_package_exposes_rust_api
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3333324Z 2 passed in 0.14s
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T18:58:25.3333742Z GREEN C24-linux: exit=0, reported passed=2; log=/home/runner/work/vsh/vsh/target/card-logs/C24-linux.log
