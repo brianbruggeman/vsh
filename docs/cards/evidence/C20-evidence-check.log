@@ -1,0 +1,6 @@
+run-01: N=5 each, zero errors; rust_CoV=158.93%; python_CoV=8.47%; load=[84.23486328125, 68.5849609375, 66.849609375]
+run-02: N=5 each, zero errors; rust_CoV=10.61%; python_CoV=13.34%; load=[79.6044921875, 71.53369140625, 68.181640625]
+run-03: N=5 each, zero errors; rust_CoV=40.36%; python_CoV=30.09%; load=[79.6044921875, 71.53369140625, 68.181640625]
+rust: allocator raw log matches capture JSON and summary: {'malloc_alloc_events': 181, 'malloc_free_events': 176, 'vm_alloc_events': 4, 'vm_dealloc_events': 2, 'malloc_alloc_requested_bytes_total': 595250}; load [114.50927734375, 88.427734375, 75.4580078125] -> [116.47021484375, 89.26708984375, 75.830078125]
+python: allocator raw log matches capture JSON and summary: {'malloc_alloc_events': 4685, 'malloc_free_events': 1914, 'vm_alloc_events': 45, 'vm_dealloc_events': 22, 'malloc_alloc_requested_bytes_total': 14514805}; load [117.23291015625, 89.87646484375, 76.1240234375] -> [117.23291015625, 89.87646484375, 76.1240234375]
+python syntax, cargo fmt, diff checks: exit 0

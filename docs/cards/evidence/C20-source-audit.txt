@@ -1,0 +1,44 @@
+[crates/vsh-cli/src/cli_config.rs]
+overrides.push((key.to_owned(), value));
+[crates/vsh-cli/src/lib.rs]
+None => Err("command name is not valid Unicode".to_owned()),
+.collect())
+[crates/vsh-cli/src/main.rs]
+let code = match ready(ParseArgsPipe.call(std::env::args_os().skip(1).collect())) {
+[crates/vsh-cli/src/run.rs]
+let environment = Pipe::call(&ChildEnvironmentPipe, config.clone()).await?;
+let config = match Pipe::call(&CreateVenvPipe, (config.clone(), options)).await {
+let environment = Pipe::call(&ChildEnvironmentPipe, config.clone()).await?;
+(config.clone(), after_separator(shell_args), environment),
+Some(index) => args.into_iter().skip(index + 1).collect(),
+[crates/vsh-core/src/child_environment.rs]
+.collect();
+[crates/vsh-core/src/create_venv.rs]
+config.venv_path.clone(),
+[crates/vsh-core/src/discovery.rs]
+let key = fs::canonicalize(&directory).unwrap_or_else(|_| directory.clone());
+path.clone(),
+.collect();
+[crates/vsh-core/src/remove_venv.rs]
+config.venv_path.clone(),
+[crates/vsh-py/src/config.rs]
+ready(StoreConfigPipe.call(self.inner.clone())).map_err(config_error)
+self.inner.venv_path.clone()
+self.inner.vsh_config_path.clone()
+self.inner.working_path.clone()
+self.inner.interpreter_path.clone()
+self.inner.shell_path.clone()
+[crates/vsh-py/src/options.rs]
+self.inner.prompt.clone()
+self.inner.python.clone()
+self.inner.working.clone()
+[crates/vsh-py/src/venv.rs]
+.map_or_else(String::new, |part| part.to_string_lossy().into_owned())
+config: config.inner.clone(),
+self.config.venv_path.clone()
+let config = self.config.clone();
+let config = self.config.clone();
+.collect();
+let environment = match ChildEnvironmentPipe.call(config.clone()).await {
+.call(self.config.venv_path.clone()),
+let config = self.config.clone();

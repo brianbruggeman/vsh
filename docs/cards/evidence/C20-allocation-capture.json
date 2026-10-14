@@ -1,0 +1,81 @@
+{
+  "platform": "macOS-15.8-arm64-arm-64bit-Mach-O",
+  "python": "3.14.6",
+  "allocator_capture_load_is_sampled": true,
+  "instrumentation": "MallocStackLogging=1, malloc_history -allEvents",
+  "pause_dylib_source": "#include <unistd.h>\n__attribute__((destructor)) static void pause_exit(void) { sleep(8); }\n",
+  "compile_command": [
+    "cc",
+    "-dynamiclib",
+    "-o",
+    "/var/folders/r9/kv1j05355r34570x2f5wpxpr0000gn/T/vsh-c20-alloc-tlsun33g/pause_exit.dylib",
+    "/var/folders/r9/kv1j05355r34570x2f5wpxpr0000gn/T/vsh-c20-alloc-tlsun33g/pause_exit.c"
+  ],
+  "compile_exit_code": 0,
+  "commands": {
+    "rust": {
+      "command": [
+        "/tmp/cargo_target/release/vsh",
+        "--version"
+      ],
+      "capture_command": [
+        "/usr/bin/malloc_history",
+        "88534",
+        "-allEvents"
+      ],
+      "malloc_history_exit_code": 0,
+      "process_exit_code": 0,
+      "host_load_average_before": [
+        114.50927734375,
+        88.427734375,
+        75.4580078125
+      ],
+      "host_load_average_after": [
+        116.47021484375,
+        89.26708984375,
+        75.830078125
+      ],
+      "summary": {
+        "malloc_alloc_events": 181,
+        "malloc_free_events": 176,
+        "vm_alloc_events": 4,
+        "vm_dealloc_events": 2,
+        "malloc_alloc_requested_bytes_total": 595250
+      },
+      "command_output": "0.8.0\n"
+    },
+    "python": {
+      "command": [
+        "python3",
+        "-m",
+        "vsh",
+        "--version"
+      ],
+      "capture_command": [
+        "/usr/bin/malloc_history",
+        "91047",
+        "-allEvents"
+      ],
+      "malloc_history_exit_code": 0,
+      "process_exit_code": 0,
+      "host_load_average_before": [
+        117.23291015625,
+        89.87646484375,
+        76.1240234375
+      ],
+      "host_load_average_after": [
+        117.23291015625,
+        89.87646484375,
+        76.1240234375
+      ],
+      "summary": {
+        "malloc_alloc_events": 4685,
+        "malloc_free_events": 1914,
+        "vm_alloc_events": 45,
+        "vm_dealloc_events": 22,
+        "malloc_alloc_requested_bytes_total": 14514805
+      },
+      "command_output": "/private/tmp/vsh-card-c20/vsh/api.py:428: SyntaxWarning: \"\\.\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\.\"? A raw string is also an option.\n  python_ver_match = re.search('(?P<interpreter>python|pypy)\\.?(?P<major>\\d+)(\\.?(?P<minor>\\d+))', python_name)  # noqa\nvsh 0.7.1\n"
+    }
+  }
+}

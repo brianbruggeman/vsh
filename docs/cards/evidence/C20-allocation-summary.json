@@ -1,0 +1,16 @@
+{
+  "rust": {
+    "malloc_alloc_events": 181,
+    "malloc_free_events": 176,
+    "vm_alloc_events": 4,
+    "vm_dealloc_events": 2,
+    "malloc_alloc_requested_bytes_total": 595250
+  },
+  "python": {
+    "malloc_alloc_events": 4685,
+    "malloc_free_events": 1914,
+    "vm_alloc_events": 45,
+    "vm_dealloc_events": 22,
+    "malloc_alloc_requested_bytes_total": 14514805
+  }
+}

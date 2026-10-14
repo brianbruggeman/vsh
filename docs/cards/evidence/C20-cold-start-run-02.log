@@ -1,0 +1,22 @@
+COMMAND: /opt/homebrew/opt/python@3.14/bin/python3.14 scripts/c20_cold_start.py --runs 5 --output docs/cards/evidence/C20-cold-start-run-02.json --rust-command /tmp/cargo_target/release/vsh --version --python-command python3 -m vsh --version
+EXIT: 0
+{
+  "measurement": "new-process CLI startup; OS page cache is not flushed",
+  "host": {
+    "platform": "macOS-15.8-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "cpu_count": 10,
+    "load_average_before": [
+      79.6044921875,
+      71.53369140625,
+      68.181640625
+    ],
+    "load_average_after": [
+      79.6044921875,
+      71.53369140625,
+      68.181640625
+    ]
+  }
+}
+rust {"argv": ["/tmp/cargo_target/release/vsh", "--version"], "N": 5, "throughput_ops_per_sec": 112.58493294756632, "latency_ms": {"single_request": 8.027333, "p50": 8.817708, "p90": 10.627166, "p99": 10.627166, "max": 10.627166, "min": 8.027333, "mean": 8.8821832, "cov_percent": 10.612464774619694}, "cpu_percent_of_sequential_wall": 40.055467444085146, "peak_rss_bytes_max": 1638400, "errors": 0}
+python {"argv": ["python3", "-m", "vsh", "--version"], "N": 5, "throughput_ops_per_sec": 6.746245013040762, "latency_ms": {"single_request": 139.753708, "p50": 139.753708, "p90": 187.654375, "p99": 187.654375, "max": 187.654375, "min": 135.788833, "mean": 148.230608, "cov_percent": 13.344206527820484}, "cpu_percent_of_sequential_wall": 86.60519020471129, "peak_rss_bytes_max": 34340864, "errors": 0}

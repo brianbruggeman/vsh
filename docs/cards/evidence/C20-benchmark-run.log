@@ -1,0 +1,20 @@
+{
+  "measurement": "new-process CLI startup; OS page cache is not flushed",
+  "host": {
+    "platform": "macOS-15.8-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "cpu_count": 10,
+    "load_average_before": [
+      84.23486328125,
+      68.5849609375,
+      66.849609375
+    ],
+    "load_average_after": [
+      84.23486328125,
+      68.5849609375,
+      66.849609375
+    ]
+  }
+}
+rust {"argv": ["/tmp/cargo_target/release/vsh", "--version"], "N": 5, "throughput_ops_per_sec": 22.401684606682423, "latency_ms": {"single_request": 186.484917, "p50": 9.455541, "p90": 186.484917, "p99": 186.484917, "max": 186.484917, "min": 7.079375, "mean": 44.6395, "cov_percent": 158.92657381215977}, "cpu_percent_of_sequential_wall": 9.593297415965681, "peak_rss_bytes_max": 1769472, "errors": 0}
+python {"argv": ["python3", "-m", "vsh", "--version"], "N": 5, "throughput_ops_per_sec": 6.482491519685625, "latency_ms": {"single_request": 149.88575, "p50": 149.88575, "p90": 178.161125, "p99": 178.161125, "max": 178.161125, "min": 142.018875, "mean": 154.261675, "cov_percent": 8.471490552957558}, "cpu_percent_of_sequential_wall": 85.80420250201483, "peak_rss_bytes_max": 33849344, "errors": 0}

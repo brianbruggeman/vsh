@@ -1,0 +1,138 @@
+{
+  "measurement": "new-process CLI startup; OS page cache is not flushed",
+  "host": {
+    "platform": "macOS-15.8-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "cpu_count": 10,
+    "load_average_before": [
+      84.23486328125,
+      68.5849609375,
+      66.849609375
+    ],
+    "load_average_after": [
+      84.23486328125,
+      68.5849609375,
+      66.849609375
+    ]
+  },
+  "commands": {
+    "rust": {
+      "argv": [
+        "/tmp/cargo_target/release/vsh",
+        "--version"
+      ],
+      "N": 5,
+      "throughput_ops_per_sec": 22.401684606682423,
+      "latency_ms": {
+        "single_request": 186.484917,
+        "p50": 9.455541,
+        "p90": 186.484917,
+        "p99": 186.484917,
+        "max": 186.484917,
+        "min": 7.079375,
+        "mean": 44.6395,
+        "cov_percent": 158.92657381215977
+      },
+      "cpu_percent_of_sequential_wall": 9.593297415965681,
+      "peak_rss_bytes_max": 1769472,
+      "errors": 0,
+      "samples": [
+        {
+          "latency_ms": 186.484917,
+          "cpu_ms": 6.492999999999999,
+          "peak_rss_bytes": 1769472,
+          "exit_code": 0,
+          "output": "0.8.0\n"
+        },
+        {
+          "latency_ms": 7.079375,
+          "cpu_ms": 3.5100000000000002,
+          "peak_rss_bytes": 1638400,
+          "exit_code": 0,
+          "output": "0.8.0\n"
+        },
+        {
+          "latency_ms": 12.208042,
+          "cpu_ms": 4.704999999999999,
+          "peak_rss_bytes": 1638400,
+          "exit_code": 0,
+          "output": "0.8.0\n"
+        },
+        {
+          "latency_ms": 7.969625,
+          "cpu_ms": 3.624,
+          "peak_rss_bytes": 1638400,
+          "exit_code": 0,
+          "output": "0.8.0\n"
+        },
+        {
+          "latency_ms": 9.455541,
+          "cpu_ms": 3.0799999999999996,
+          "peak_rss_bytes": 1638400,
+          "exit_code": 0,
+          "output": "0.8.0\n"
+        }
+      ]
+    },
+    "python": {
+      "argv": [
+        "python3",
+        "-m",
+        "vsh",
+        "--version"
+      ],
+      "N": 5,
+      "throughput_ops_per_sec": 6.482491519685625,
+      "latency_ms": {
+        "single_request": 149.88575,
+        "p50": 149.88575,
+        "p90": 178.161125,
+        "p99": 178.161125,
+        "max": 178.161125,
+        "min": 142.018875,
+        "mean": 154.261675,
+        "cov_percent": 8.471490552957558
+      },
+      "cpu_percent_of_sequential_wall": 85.80420250201483,
+      "peak_rss_bytes_max": 33849344,
+      "errors": 0,
+      "samples": [
+        {
+          "latency_ms": 149.88575,
+          "cpu_ms": 135.05700000000002,
+          "peak_rss_bytes": 30490624,
+          "exit_code": 0,
+          "output": "/private/tmp/vsh-card-c20/vsh/api.py:428: SyntaxWarning: \"\\.\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\.\"? A raw string is also an option.\n  python_ver_match = re.search('(?P<interpreter>python|pypy)\\.?(?P<major>\\d+)(\\.?(?P<minor>\\d+))', python_name)  # noqa\nvsh 0.7.1\n"
+        },
+        {
+          "latency_ms": 157.223375,
+          "cpu_ms": 127.50600000000001,
+          "peak_rss_bytes": 28082176,
+          "exit_code": 0,
+          "output": "/private/tmp/vsh-card-c20/vsh/api.py:428: SyntaxWarning: \"\\.\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\.\"? A raw string is also an option.\n  python_ver_match = re.search('(?P<interpreter>python|pypy)\\.?(?P<major>\\d+)(\\.?(?P<minor>\\d+))', python_name)  # noqa\nvsh 0.7.1\n"
+        },
+        {
+          "latency_ms": 142.018875,
+          "cpu_ms": 128.042,
+          "peak_rss_bytes": 27377664,
+          "exit_code": 0,
+          "output": "/private/tmp/vsh-card-c20/vsh/api.py:428: SyntaxWarning: \"\\.\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\.\"? A raw string is also an option.\n  python_ver_match = re.search('(?P<interpreter>python|pypy)\\.?(?P<major>\\d+)(\\.?(?P<minor>\\d+))', python_name)  # noqa\nvsh 0.7.1\n"
+        },
+        {
+          "latency_ms": 144.01925,
+          "cpu_ms": 129.51,
+          "peak_rss_bytes": 26755072,
+          "exit_code": 0,
+          "output": "/private/tmp/vsh-card-c20/vsh/api.py:428: SyntaxWarning: \"\\.\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\.\"? A raw string is also an option.\n  python_ver_match = re.search('(?P<interpreter>python|pypy)\\.?(?P<major>\\d+)(\\.?(?P<minor>\\d+))', python_name)  # noqa\nvsh 0.7.1\n"
+        },
+        {
+          "latency_ms": 178.161125,
+          "cpu_ms": 141.7,
+          "peak_rss_bytes": 33849344,
+          "exit_code": 0,
+          "output": "/private/tmp/vsh-card-c20/vsh/api.py:428: SyntaxWarning: \"\\.\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\.\"? A raw string is also an option.\n  python_ver_match = re.search('(?P<interpreter>python|pypy)\\.?(?P<major>\\d+)(\\.?(?P<minor>\\d+))', python_name)  # noqa\nvsh 0.7.1\n"
+        }
+      ]
+    }
+  }
+}

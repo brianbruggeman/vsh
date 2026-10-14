@@ -1,0 +1,13 @@
+parking_lot v0.12.5
+├── proxima-primitives v0.1.0 (https://github.com/brianbruggeman/proxima?rev=875e56d366083f6fea4128626eb546a6269931db#875e56d3)
+│   ├── proxima-clock v0.1.0 (https://github.com/brianbruggeman/proxima?rev=875e56d366083f6fea4128626eb546a6269931db#875e56d3)
+│   │   └── proxima-telemetry v0.1.0 (https://github.com/brianbruggeman/proxima?rev=875e56d366083f6fea4128626eb546a6269931db#875e56d3)
+│   │       └── vsh-cli v0.8.0 (/private/tmp/vsh-card-c20/crates/vsh-cli)
+│   ├── proxima-telemetry v0.1.0 (https://github.com/brianbruggeman/proxima?rev=875e56d366083f6fea4128626eb546a6269931db#875e56d3) (*)
+│   ├── vsh-cli v0.8.0 (/private/tmp/vsh-card-c20/crates/vsh-cli)
+│   └── vsh-core v0.8.0 (/private/tmp/vsh-card-c20/crates/vsh-core)
+│       └── vsh-cli v0.8.0 (/private/tmp/vsh-card-c20/crates/vsh-cli)
+├── proxima-telemetry v0.1.0 (https://github.com/brianbruggeman/proxima?rev=875e56d366083f6fea4128626eb546a6269931db#875e56d3) (*)
+└── temp-env v0.3.6
+    [dev-dependencies]
+    └── vsh-cli v0.8.0 (/private/tmp/vsh-card-c20/crates/vsh-cli)
