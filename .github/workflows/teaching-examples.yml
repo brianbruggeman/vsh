@@ -1,0 +1,51 @@
+name: Teaching examples
+
+on:
+  push:
+    branches: [main, 'cards/**']
+    paths:
+      - '.github/workflows/teaching-examples.yml'
+      - 'README.rst'
+      - 'docs/using-vsh.md'
+      - 'scripts/card_c25_examples.py'
+      - 'crates/vsh-cli/**'
+      - 'crates/vsh-core/**'
+      - 'crates/vsh-py/**'
+      - 'python/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'pyproject.toml'
+  pull_request:
+    paths:
+      - '.github/workflows/teaching-examples.yml'
+      - 'README.rst'
+      - 'docs/using-vsh.md'
+      - 'scripts/card_c25_examples.py'
+      - 'crates/vsh-cli/**'
+      - 'crates/vsh-core/**'
+      - 'crates/vsh-py/**'
+      - 'python/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+jobs:
+  examples:
+    name: ${{ matrix.os }} examples
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v6
+      - name: Build native wheel
+        run: uv run --no-project --with maturin maturin build --manifest-path crates/vsh-py/Cargo.toml --out target/c25-wheel --interpreter python
+      - name: Run guide examples from exact wheel
+        run: uv run --no-project python scripts/card_c25_examples.py target/c25-wheel

@@ -3,7 +3,7 @@
 Each estimate is an assumed wall-clock budget for implementation, checks, two
 reviews, postmortem, commit, and worktree → local `main` → `origin/main` landing.
 The limit is 20 minutes per card. Split a card if its observed work exceeds the
-limit; do not land a red checkpoint. Local total: **482 minutes (8h 02m)**,
+limit; do not land a red checkpoint. Local total: **497 minutes (8h 17m)**,
 revised from observed card duration after each landing. Remote CI and package
 index queues can add unknown external wait.
 
@@ -33,8 +33,9 @@ index queues can add unknown external wait.
 | C22 | Native Windows venv layout/discovery/config/remove. Native create→enter→remove test (N>0). | C21 | 18m |
 | C23 | Pip wheel console entry invokes shared Rust CLI; installed wheel exposes CLI and PyO3 API. Temp-env install, `vsh --version`, import tests (N>0). | C16,C18 | 18m |
 | C24 | Native macOS/Linux/Windows matrix; each job builds and smoke-tests wheel, CLI, and library with nonzero counts. Inspect completed CI jobs. | C21-C23 | 18m |
-| C25 | Proxima Teacher end-user install/configure/use docs and executable examples. Run every documented command in isolated temp home. | C24 | 16m |
-| C26 | Set Cargo, Python, persisted config, examples and changelog to 0.8.0; full green gates and wheel metadata. | C25 | 15m |
+| C25 | Proxima Teacher end-user install/configure/use docs and executable examples. Run every native-platform guide command in isolated temp home. | C24 | 16m |
+| C29 | Preserve child-shell stdout/stderr without trailing newlines through the installed Python console; native installed-wheel regression proves exact bytes. | C23 | 15m |
+| C26 | Set Cargo, Python, persisted config, examples and changelog to 0.8.0; full green gates and wheel metadata. | C25,C29 | 15m |
 | C27 | Prepare and validate release artifacts/checksums and tag from promoted `origin/main`. `gh release`/artifact metadata match 0.8.0. | C26 | 18m |
 | C28 | Submit verified artifacts to GitHub release/PyPI and capture accepted receipts. If any upload/review exceeds 20m, split at a safe boundary. | C27 | 15m |
 
