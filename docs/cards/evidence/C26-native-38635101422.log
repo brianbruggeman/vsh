@@ -1,0 +1,21 @@
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:10.0291090Z 📦 Built wheel for abi3 Python ≥ 3.9 to /Users/runner/work/vsh/vsh/target/c24-wheels-614fc8b64d384e6dbef29e290d0df60a/vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:10.4083310Z C24 platform=Darwin wheel=vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl compatible_tags=1
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:11.0635100Z installed metadata version: 0.8.0
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:11.0796640Z installed imports: /Users/runner/work/vsh/vsh/target/c24-venv-614fc8b64d384e6dbef29e290d0df60a/lib/python3.13/site-packages/vsh/__init__.py ; /Users/runner/work/vsh/vsh/target/c24-venv-614fc8b64d384e6dbef29e290d0df60a/lib/python3.13/site-packages/vsh/_vsh.abi3.so
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:11.0798370Z installed wheel source: /Users/runner/work/vsh/vsh/target/c24-wheels-614fc8b64d384e6dbef29e290d0df60a/vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:11.0803910Z 4 passed in 0.28s
+macos-15 wheel	Build and test installed native wheel	2026-10-14T21:06:11.0804450Z GREEN C24-darwin: exit=0, reported passed=4; log=/Users/runner/work/vsh/vsh/target/card-logs/C24-darwin.log
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:34.8188322Z 📦 Built wheel for abi3 Python ≥ 3.9 to D:\a\vsh\vsh\target\c24-wheels-123b7e967805494e84ccc0918bdf9cb1\vsh-0.8.0-cp39-abi3-win_amd64.whl
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:35.3421730Z C24 platform=Windows wheel=vsh-0.8.0-cp39-abi3-win_amd64.whl compatible_tags=1
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:36.6873238Z installed metadata version: 0.8.0
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:36.6875379Z installed imports: D:\a\vsh\vsh\target\c24-venv-123b7e967805494e84ccc0918bdf9cb1\Lib\site-packages\vsh\__init__.py ; D:\a\vsh\vsh\target\c24-venv-123b7e967805494e84ccc0918bdf9cb1\Lib\site-packages\vsh\_vsh.pyd
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:36.6876583Z installed wheel source: D:\a\vsh\vsh\target\c24-wheels-123b7e967805494e84ccc0918bdf9cb1\vsh-0.8.0-cp39-abi3-win_amd64.whl
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:36.6880586Z 4 passed in 0.53s
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:50:36.6880968Z GREEN C24-windows: exit=0, reported passed=4; log=D:\a\vsh\vsh\target\card-logs\C24-windows.log
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:55.3805625Z 📦 Built wheel for abi3 Python ≥ 3.9 to /home/runner/work/vsh/vsh/target/c24-wheels-91529dc52d2d4f09bf15e1961e5a1b31/vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:55.6642173Z C24 platform=Linux wheel=vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl compatible_tags=1
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:56.5821646Z installed metadata version: 0.8.0
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:56.5822959Z installed imports: /home/runner/work/vsh/vsh/target/c24-venv-91529dc52d2d4f09bf15e1961e5a1b31/lib/python3.13/site-packages/vsh/__init__.py ; /home/runner/work/vsh/vsh/target/c24-venv-91529dc52d2d4f09bf15e1961e5a1b31/lib/python3.13/site-packages/vsh/_vsh.abi3.so
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:56.5823750Z installed wheel source: /home/runner/work/vsh/vsh/target/c24-wheels-91529dc52d2d4f09bf15e1961e5a1b31/vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:56.5826990Z 4 passed in 0.30s
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:48:56.5827249Z GREEN C24-linux: exit=0, reported passed=4; log=/home/runner/work/vsh/vsh/target/card-logs/C24-linux.log
