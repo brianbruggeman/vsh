@@ -2,7 +2,9 @@
 //! validated [`Config`] into these APIs; platform effects are added in later cards.
 
 mod config;
+mod lifecycle;
 mod options;
 
 pub use config::Config;
+pub use lifecycle::{Effect, Event, State, transition};
 pub use options::{CreateOptions, EnterOptions};
