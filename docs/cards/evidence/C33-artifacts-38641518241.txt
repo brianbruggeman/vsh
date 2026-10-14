@@ -1,0 +1,16 @@
+C33 candidate SHA: 0098dd7b2e51718d39cace370a7e7d75b4061227
+Native wheel matrix: https://github.com/brianbruggeman/vsh/actions/runs/38641518241
+Conclusion: success; each platform built, installed, tested, selected one 0.8.0 wheel, and retained one artifact.
+
+Platform | Artifact ID | Wheel | Tests
+---|---:|---|---:|
+macos-15 | 11931136448 | vsh-0.8.0-cp39-abi3-macosx_11_0_arm64.whl | 4/4
+ubuntu-latest | 11931420785 | vsh-0.8.0-cp39-abi3-manylinux_2_39_x86_64.whl | 4/4
+windows-latest | 11931490710 | vsh-0.8.0-cp39-abi3-win_amd64.whl | 4/4
+
+Retained exact-run artifacts were downloaded into target/c33-hosted/ and SHA256 independently computed:
+9e07c8de83e3109c2e246d5bf9dc15501593224b2a5519e3d2cf3b313599aa98  macOS wheel (1,977,462 bytes)
+1bde65bd0ce328e71558a3fa5ece3d4dc981114043189a54c9ca5b1e0b02cb3c  Linux wheel (16,595,838 bytes)
+2e1a2798832a344618daa8f498411f2a83ef4b5339961f823fc37e830cd7eef0  Windows wheel (1,380,452 bytes)
+
+Full hosted log: docs/cards/evidence/C33-native-38641518241.log
