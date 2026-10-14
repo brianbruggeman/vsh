@@ -6,9 +6,11 @@ mod config_file;
 mod lifecycle;
 mod limits;
 mod options;
+mod venv_layout;
 
 pub use config::Config;
 pub use config_file::{LoadConfigPipe, StoreConfigPipe};
 pub use lifecycle::{Effect, Event, LifecyclePipe, State, transition};
 pub use limits::MAX_WALK_DEPTH;
 pub use options::{CreateOptions, EnterOptions};
+pub use venv_layout::{ObserveVenvLayoutPipe, ValidateVenvLayoutPipe, VenvLayout};
