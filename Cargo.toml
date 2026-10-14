@@ -14,6 +14,7 @@ conflaguration = { version = "2.0.0", features = ["derive", "toml"] }
 serde = { version = "1.0.229", features = ["derive"] }
 temp-env = "0.3.6"
 serde_json = "1.0.149"
+proxima-primitives = { git = "https://github.com/brianbruggeman/proxima", rev = "875e56d366083f6fea4128626eb546a6269931db", default-features = false }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

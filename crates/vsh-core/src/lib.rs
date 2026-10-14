@@ -6,5 +6,5 @@ mod lifecycle;
 mod options;
 
 pub use config::Config;
-pub use lifecycle::{Effect, Event, State, transition};
+pub use lifecycle::{Effect, Event, LifecyclePipe, State, transition};
 pub use options::{CreateOptions, EnterOptions};

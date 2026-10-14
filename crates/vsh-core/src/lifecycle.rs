@@ -41,6 +41,24 @@ pub enum Effect {
     Rejected,
 }
 
+/// Zero-sized adapter required to expose lifecycle decisions as a Proxima
+/// `Pipe`; the type owns no state and simply delegates to `transition`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LifecyclePipe;
+
+impl proxima_primitives::pipe::Pipe for LifecyclePipe {
+    type In = (State, Event);
+    type Out = (State, Effect);
+    type Err = core::convert::Infallible;
+
+    fn call(
+        &self,
+        input: Self::In,
+    ) -> impl core::future::Future<Output = Result<Self::Out, Self::Err>> {
+        async move { Ok(transition(input.0, input.1)) }
+    }
+}
+
 /// Apply one event without performing I/O or allocating.
 ///
 /// The tuple is intentionally the entire transition result; a wrapper struct
@@ -77,7 +95,21 @@ pub const fn transition(state: State, event: Event) -> (State, Effect) {
 
 #[cfg(test)]
 mod tests {
-    use super::{Effect, Event, State, transition};
+    use core::future::Future;
+    use core::task::{Context, Poll, Waker};
+
+    use proxima_primitives::pipe::Pipe;
+
+    use super::{Effect, Event, LifecyclePipe, State, transition};
+
+    fn poll_ready<F: Future>(future: F) -> F::Output {
+        let mut context = Context::from_waker(Waker::noop());
+        let mut future = core::pin::pin!(future);
+        match future.as_mut().poll(&mut context) {
+            Poll::Ready(value) => value,
+            Poll::Pending => panic!("the pure lifecycle pipe must be immediately ready"),
+        }
+    }
 
     const STATES: [State; 11] = [
         State::Absent,
@@ -246,5 +278,18 @@ mod tests {
             }
             assert_eq!(state, State::Absent);
         }
+    }
+
+    #[test]
+    fn lifecycle_pipe_shape_preserves_the_typed_transition() {
+        let pipe = LifecyclePipe;
+        assert_eq!(
+            poll_ready(pipe.call((State::Absent, Event::Create))),
+            Ok((State::Creating, Effect::Create))
+        );
+        assert_eq!(
+            poll_ready(pipe.call((State::EnteringEphemeral, Event::Failed))),
+            Ok((State::CleaningEphemeralFailure, Effect::Remove))
+        );
     }
 }
