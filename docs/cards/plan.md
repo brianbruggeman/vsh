@@ -3,7 +3,7 @@
 Each estimate is an assumed wall-clock budget for implementation, checks, two
 reviews, postmortem, commit, and worktree → local `main` → `origin/main` landing.
 The limit is 20 minutes per card. Split a card if its observed work exceeds the
-limit; do not land a red checkpoint. Local total: **522 minutes (8h 42m)**,
+limit; do not land a red checkpoint. Local total: **549 minutes (9h 9m)**,
 revised from observed card duration after each landing. Remote CI and package
 index queues can add unknown external wait.
 
@@ -36,7 +36,8 @@ index queues can add unknown external wait.
 | C25 | Proxima Teacher end-user install/configure/use docs and executable examples. Run every native-platform guide command in isolated temp home. | C24 | 39m actual |
 | C29 | Preserve child-shell stdout/stderr without trailing newlines through the installed Python console; native installed-wheel regression proves exact bytes. | C23 | 17m actual (16m33s) |
 | C26 | Set Cargo, Python, persisted config, examples and changelog to 0.8.0; full green gates and wheel metadata. | C25,C29 | 15m |
-| C27 | Prepare and validate release artifacts/checksums and tag from promoted `origin/main`. `gh release`/artifact metadata match 0.8.0. | C26 | 18m |
+| C30 | Retain each green native 0.8.0 wheel as a workflow artifact named with exact source SHA and platform. | C26 | 15m planned |
+| C27 | Assemble and validate the 0.8.0 sdist and retained native wheels from the promoted C30 candidate SHA, verify metadata/checksums, and create a local-only tag at that SHA. | C26,C30 | 18m |
 | C28 | Submit verified artifacts to GitHub release/PyPI and capture accepted receipts. If any upload/review exceeds 20m, split at a safe boundary. | C27 | 15m |
 
 Package-index availability is an external verification milestone after C28,
