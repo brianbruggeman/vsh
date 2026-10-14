@@ -3,8 +3,10 @@
 
 mod config;
 mod lifecycle;
+mod limits;
 mod options;
 
 pub use config::Config;
 pub use lifecycle::{Effect, Event, LifecyclePipe, State, transition};
+pub use limits::MAX_WALK_DEPTH;
 pub use options::{CreateOptions, EnterOptions};
