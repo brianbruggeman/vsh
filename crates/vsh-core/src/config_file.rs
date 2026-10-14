@@ -121,6 +121,7 @@ mod tests {
         );
         assert_eq!(legacy.shell_path, PathBuf::from("/bin/sh"));
         assert_eq!(legacy.working_path, Some(PathBuf::from("/legacy/work")));
+        assert_eq!(legacy.vsh_version, "0.7.1");
 
         let second_legacy =
             poll_ready(LoadConfigPipe.call(fixture("legacy-0.7.2-stale-paths.cfg")))
@@ -130,6 +131,7 @@ mod tests {
             second_legacy.interpreter_path,
             PathBuf::from("/legacy/venvs/vsh/bin/python")
         );
+        assert_eq!(second_legacy.vsh_version, "0.7.2");
 
         let temp_dir = tempfile::tempdir().expect("create isolated temp directory");
         let destination = temp_dir.path().join("stored.cfg");
@@ -139,16 +141,23 @@ mod tests {
             vsh_config_path: destination.clone(),
             interpreter_path: PathBuf::from("/python"),
             shell_path: PathBuf::from("/bin/sh"),
-            vsh_version: "0.8.0".to_owned(),
             ..Config::default()
         };
         poll_ready(StoreConfigPipe.call(to_store.clone())).expect("config stores");
         let stored =
             poll_ready(LoadConfigPipe.call(destination.clone())).expect("stored config reloads");
         assert_eq!(stored, to_store);
+        assert_eq!(stored.vsh_version, env!("CARGO_PKG_VERSION"));
         let serialized = std::fs::read_to_string(&destination).expect("read stored text");
         assert!(serialized.contains("venv_path = '/venvs/stored\"'"));
         assert!(!serialized.contains("\\\"/venvs/stored"));
+
+        let missing_version_path = temp_dir.path().join("missing-version.cfg");
+        std::fs::write(&missing_version_path, "venv_name = 'without-version'\n")
+            .expect("write config without explicit version");
+        let missing_version =
+            poll_ready(LoadConfigPipe.call(missing_version_path)).expect("load version default");
+        assert_eq!(missing_version.vsh_version, env!("CARGO_PKG_VERSION"));
 
         let mut repaired_legacy = legacy.clone();
         repaired_legacy.vsh_config_path = temp_dir.path().join("legacy-roundtrip.cfg");

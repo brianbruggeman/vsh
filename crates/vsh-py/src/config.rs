@@ -19,7 +19,7 @@ pub(crate) struct PyConfig {
 #[pymethods]
 impl PyConfig {
     #[new]
-    #[pyo3(signature = (venv_name, venv_path = PathBuf::new(), vsh_config_path = PathBuf::new(), working_path = None, interpreter_path = PathBuf::new(), shell_path = PathBuf::new(), vsh_version = String::new()))]
+    #[pyo3(signature = (venv_name, venv_path = PathBuf::new(), vsh_config_path = PathBuf::new(), working_path = None, interpreter_path = PathBuf::new(), shell_path = PathBuf::new(), vsh_version = None))]
     fn new(
         venv_name: String,
         venv_path: PathBuf,
@@ -27,7 +27,7 @@ impl PyConfig {
         working_path: Option<PathBuf>,
         interpreter_path: PathBuf,
         shell_path: PathBuf,
-        vsh_version: String,
+        vsh_version: Option<String>,
     ) -> PyResult<Self> {
         let inner = Config {
             venv_name,
@@ -36,7 +36,7 @@ impl PyConfig {
             working_path,
             interpreter_path,
             shell_path,
-            vsh_version,
+            vsh_version: vsh_version.unwrap_or_else(|| Config::default().vsh_version),
         };
         let inner = Config::from_value(inner).map_err(config_error)?;
         Ok(Self { inner })

@@ -88,9 +88,11 @@ impl Pipe for HelpPipe {
         (): Self::In,
     ) -> impl core::future::Future<Output = Result<Self::Out, Self::Err>> {
         async {
-            Ok(
-                "vsh 0.8.0\n\nUsage: vsh <COMMAND>\n\nCommands:\n  create      Create a virtual environment\n  enter       Enter a virtual environment\n  remove      Remove a virtual environment\n  list        List discovered environments\n  completion  Print command completions\n  help        Print this message\n  --version   Print version\n",
-            )
+            Ok(concat!(
+                "vsh ",
+                env!("CARGO_PKG_VERSION"),
+                "\n\nUsage: vsh <COMMAND>\n\nCommands:\n  create      Create a virtual environment\n  enter       Enter a virtual environment\n  remove      Remove a virtual environment\n  list        List discovered environments\n  completion  Print command completions\n  help        Print this message\n  --version   Print version\n"
+            ))
         }
     }
 }
@@ -221,6 +223,7 @@ mod tests {
     #[test]
     fn cli_help_list_and_completion_are_consistent() {
         let help = ready(HelpPipe.call(())).unwrap();
+        assert!(help.starts_with(concat!("vsh ", env!("CARGO_PKG_VERSION"), "\n")));
         let commands = ready(ListCommandsPipe.call(())).unwrap();
         for command in &commands {
             assert!(help.contains(command));

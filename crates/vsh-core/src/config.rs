@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// The CLI will resolve this once and pass the validated value to the library.
 /// These owned strings and paths live on the cold configuration path; command
 /// execution does not re-resolve environment variables.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Settings)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Settings)]
 #[settings(prefix = "VSH")]
 #[serde(default)]
 pub struct Config {
@@ -45,10 +45,28 @@ impl Validate for Config {
     }
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            venv_name: String::new(),
+            venv_path: PathBuf::new(),
+            vsh_config_path: PathBuf::new(),
+            working_path: None,
+            interpreter_path: PathBuf::new(),
+            shell_path: PathBuf::new(),
+            vsh_version: env!("CARGO_PKG_VERSION").to_owned(),
+        }
+    }
+}
+
 impl Config {
     /// Resolve the VSH-prefixed environment and explicitly validate it.
     pub fn from_environment() -> conflaguration::Result<Self> {
-        conflaguration::builder::<Self>().env().validate().build()
+        conflaguration::builder::<Self>()
+            .value(Self::default())
+            .env()
+            .validate()
+            .build()
     }
 
     /// Validate a fluent or library-constructed value before use.
@@ -67,9 +85,12 @@ mod tests {
     #[test]
     fn environment_settings_are_resolved_and_validated() {
         temp_env::with_var("VSH_VENV_NAME", Some("demo"), || {
-            let config = Config::from_environment()
-                .expect("a non-empty VSH_VENV_NAME should produce valid config");
-            assert_eq!(config.venv_name, "demo");
+            temp_env::with_var("VSH_VSH_VERSION", None::<&str>, || {
+                let config = Config::from_environment()
+                    .expect("a non-empty VSH_VENV_NAME should produce valid config");
+                assert_eq!(config.venv_name, "demo");
+                assert_eq!(config.vsh_version, env!("CARGO_PKG_VERSION"));
+            });
         });
 
         temp_env::with_var("VSH_VENV_NAME", Some("  "), || {
@@ -92,5 +113,10 @@ mod tests {
         })
         .expect("a valid fluent value should pass validation");
         assert_eq!(fluent.venv_name, "fluent");
+    }
+
+    #[test]
+    fn package_version_is_the_default_config_version() {
+        assert_eq!(Config::default().vsh_version, env!("CARGO_PKG_VERSION"));
     }
 }

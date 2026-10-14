@@ -104,8 +104,10 @@ def test_installed_python_package_exposes_rust_api():
             str(python),
             "-I",
             "-c",
-            "import vsh; from vsh import _vsh; "
+            "import vsh; from importlib.metadata import version; from vsh import _vsh; "
             "assert vsh.Config and vsh.Venv and callable(_vsh.cli); "
+            "assert vsh.__version__ == version('vsh'); "
+            "assert vsh.Config('demo').vsh_version == vsh.__version__; "
             "print(vsh.__file__); print(_vsh.__file__)",
         ],
         capture_output=True,
