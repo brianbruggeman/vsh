@@ -1,0 +1,19 @@
+C32 exact-source/tag gate
+checked_at_utc=2026-10-14T22:04:26Z
+C34_promoted_base=8bd0c54a9ecd4c6d3d961155a94633b4ca0f8903
+C33_test_source_tag_sha=0098dd7b2e51718d39cace370a7e7d75b4061227
+C34_distribution_dir=/private/tmp/vsh-c34-release/target/c34-release-files
+
+Collision results (only explicit not-found responses count as absence):
+- PyPI JSON: HTTP 404, curl exit 0.
+- GitHub release API: HTTP 404 Not Found, gh exit 1.
+- Remote v0.8.0 tag before create: no ref, git ls-remote exit 2.
+- Local v0.8.0 tag before create: absent, git show-ref --verify --quiet exit 1.
+
+C34 exact file hash recheck: 4/4 rows match C34-sha256.txt; 4 unique basenames.
+Source SHA reachable from origin/main: PASS.
+Source command: cargo test --workspace (in target/c32-source exported by git archive at C33 SHA).
+Workspace test log: C32-workspace-tests.log; reported passed counts sum to 35 (>0), no failures.
+Created local tag only: v0.8.0 -> 0098dd7b2e51718d39cace370a7e7d75b4061227.
+Remote v0.8.0 tag after local tag creation: absent, git ls-remote exit 2.
+After promotion, C32 will push main with push.followTags=false and --no-follow-tags, then assert remote tag absence again.

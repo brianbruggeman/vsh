@@ -1,0 +1,12 @@
+C32 preflight (UTC 2026-10-14T22:02:57Z)
+C34 promoted base: 8bd0c54a9ecd4c6d3d961155a94633b4ca0f8903
+C33 source/test/tag SHA: 0098dd7b2e51718d39cace370a7e7d75b4061227
+C34 retained distributions: /private/tmp/vsh-c34-release/target/c34-release-files
+
+PyPI: GET https://pypi.org/pypi/vsh/0.8.0/json returned HTTP 404; curl exit 0.
+GitHub: GET repos/brianbruggeman/vsh/releases/tags/v0.8.0 returned HTTP 404 Not Found; gh api exit 1.
+Remote tag: git ls-remote --exit-code origin refs/tags/v0.8.0 returned no ref; exit 2.
+Local tag: git show-ref --verify --quiet refs/tags/v0.8.0 returned absent; exit 1.
+
+Retained file rehash: shasum -a 256 over the 3 wheels and sdist matches every
+row in C34-sha256.txt. Exact digests are recorded in C32-rehash.txt.

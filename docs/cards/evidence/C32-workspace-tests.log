@@ -1,0 +1,93 @@
+   Compiling vsh-core v0.8.0 (/private/tmp/vsh-c32-final/target/c32-source/crates/vsh-core)
+   Compiling vsh-py v0.8.0 (/private/tmp/vsh-c32-final/target/c32-source/crates/vsh-py)
+   Compiling vsh-cli v0.8.0 (/private/tmp/vsh-c32-final/target/c32-source/crates/vsh-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.69s
+     Running unittests src/lib.rs (/tmp/cargo_target/debug/deps/vsh_cli-2991ff0ef2777b68)
+
+running 11 tests
+test cli_config::tests::cli_config_rejects_invalid_values_before_effects ... ok
+test cli_config::tests::cli_path_flags_preserve_non_unicode_os_strings ... ok
+test telemetry::tests::ambient_emit_without_default_recorder_is_noop ... ok
+test telemetry::tests::telemetry_filter_rejects_invalid_level_before_recorder_install ... ok
+test tests::cli_help_list_and_completion_are_consistent ... ok
+test cli_config::tests::cli_config_rejects_malformed_file ... ok
+test tests::cli_parser_recognizes_commands_and_preserves_os_arguments ... ok
+test cli_config::tests::cli_config_precedence_is_file_then_environment_then_flags ... ok
+test cli_config::tests::cli_config_rejects_missing_file_and_invalid_environment ... ok
+test telemetry::tests::telemetry_filter_settings_resolve_and_validate_from_environment ... ok
+test telemetry::tests::configured_recorder_captures_span_and_error_log ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/main.rs (/tmp/cargo_target/debug/deps/vsh-2317dc2e54c60f86)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/actions.rs (/tmp/cargo_target/debug/deps/actions-a39d75424d4d055b)
+
+running 6 tests
+test cli_ephemeral_refuses_to_remove_an_existing_environment ... ok
+test cli_enter_list_and_remove_use_configured_pipes ... ok
+test cli_ephemeral_removes_partial_environment_after_create_failure ... ok
+test cli_ephemeral_create_cleans_up_after_successful_exit ... ok
+test cli_ephemeral_create_enters_and_cleans_up_after_nonzero_exit ... ok
+test cli_create_keeps_a_valid_environment ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.87s
+
+     Running tests/config.rs (/tmp/cargo_target/debug/deps/config-12096085c7dec18c)
+
+running 1 test
+test cli_config_invalid_value_stops_before_deferred_effects ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/telemetry.rs (/tmp/cargo_target/debug/deps/telemetry-1634677aa3dd52c8)
+
+running 1 test
+test telemetry_run_action_records_error_span ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests src/lib.rs (/tmp/cargo_target/debug/deps/vsh_core-2892827119ab6867)
+
+running 16 tests
+test create_venv::tests::invalid_config_is_rejected_before_creating_anything ... ok
+test lifecycle::tests::lifecycle_pipe_shape_preserves_the_typed_transition ... ok
+test limits::tests::exported_walk_depth_matches_conflaguration_build_resolution ... ok
+test child_environment::tests::child_environment_pipe_prepends_the_configured_venv_path ... ok
+test config::tests::package_version_is_the_default_config_version ... ok
+test lifecycle::tests::lifecycle_paths_and_all_pairs_are_defined_without_heap_state ... ok
+test shell::tests::shell_pipe_rejects_empty_venv_path_before_launching ... ok
+test shell::tests::shell_pipe_rejects_invalid_config_before_launching ... ok
+test config::tests::environment_settings_are_resolved_and_validated ... ok
+test config_file::tests::config_file_pipes_load_legacy_store_and_reject_invalid_data ... ok
+test venv_layout::tests::venv_layout_pipes_observe_then_validate ... ok
+test remove_venv::tests::remove_venv_guards_invalid_dry_run_and_real_cleanup ... ok
+test options::tests::options_defaults_and_environment_match_serde_and_fluent_values ... ok
+test shell::tests::shell_pipe_passes_explicit_environment_cwd_and_exit_status ... ok
+test discovery::tests::discovery_pipes_bound_walk_resolve_stale_paths_and_order_vshrc ... ok
+test create_venv::tests::create_venv_pipe_runs_python_and_produces_valid_layout ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running unittests src/lib.rs (/tmp/cargo_target/debug/deps/_vsh-464aef4fc1fc5802)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vsh_cli
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vsh_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
