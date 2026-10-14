@@ -17,3 +17,10 @@ Workspace test log: C32-workspace-tests.log; reported passed counts sum to 35 (>
 Created local tag only: v0.8.0 -> 0098dd7b2e51718d39cace370a7e7d75b4061227.
 Remote v0.8.0 tag after local tag creation: absent, git ls-remote exit 2.
 After promotion, C32 will push main with push.followTags=false and --no-follow-tags, then assert remote tag absence again.
+
+Post-promotion check
+promoted_main_sha=5c1b82909e9411a9461d73cad833bdd6170a23af
+push_command=git -c push.followTags=false push --no-follow-tags origin main
+local_main_equals_origin_main=true
+remote_tag_lookup_after_promotion=absent (git ls-remote --exit-code exit 2)
+checked_at_utc=2026-10-14T22:11:25Z
