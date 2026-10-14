@@ -1,0 +1,19 @@
+C28 preflight (UTC 2026-10-14T22:18:45Z)
+base_main=e6a12ae37fd8cc9fcb883a0eeb187cd6560265ab
+source_tag_target=0098dd7b2e51718d39cace370a7e7d75b4061227
+artifact_dir=/private/tmp/vsh-c34-release/target/c34-release-files
+manifest=docs/cards/evidence/C34-sha256.txt
+PyPI https://pypi.org/pypi/vsh/0.8.0/json: HTTP 404, curl exit 0
+GitHub release v0.8.0: HTTP 404 Not Found, gh api exit 1
+remote refs/tags/v0.8.0: absent, git ls-remote exit 2
+Preflight hashes were computed from the retained four files; recompute directly
+immediately before publication and compare to C34-sha256.txt.
+
+Publisher capability probe (UTC 2026-10-14T22:19:00Z)
+uv_version=0.4.9; uv publish subcommand=unavailable
+python3 -m twine --version: unavailable (No module named twine)
+UV_PUBLISH_TOKEN/TWINE_PASSWORD/PYPI_TOKEN environment credentials: absent
+~/.pypirc: absent
+~/.config/pypi/config: absent
+macOS Keychain services upload.pypi.org and pypi.org: no credential bytes
+Result: PyPI publication is split into C35; no PyPI upload attempted.

@@ -42,11 +42,11 @@ index queues can add unknown external wait.
 | C33 | Configure the sdist to include README, changelog, and license; prove local inventory/metadata and wheel behavior, then retain a green native matrix for the new source SHA. | C31 | 18m |
 | C34 | Assemble the exact C33 SHA's three hosted wheels and sdist; validate metadata/tags/source inventory and independently recompute four SHA-256 rows. | C33 | 18m |
 | C32 | Re-run source test gate and final collision/hash checks; create and prove the local-only v0.8.0 tag at the C33 implementation source SHA proven by C34. | C34 | 18m |
-| C28 | Rehash and upload the exact four C34 files from the retained directory to GitHub release/PyPI; capture and compare accepted receipts. If any upload/review exceeds 20m, split at a safe boundary. | C32 | 15m |
+| C28 | Rehash and publish the exact four C34 files as GitHub Release v0.8.0 targeting the exact tested source; verify four uploaded asset hashes. | C32 | 12m |
+| C35 | Publish the exact four C34 files to PyPI and verify PyPI JSON file digests. Requires configured PyPI publisher credentials; allow safe retry of matching partial uploads. | C28 | 12m |
 
-Package-index availability is an external verification milestone after C28,
-with an unknown wait; it is not included in the local ETA. Never claim the
-published version until the index exposes the exact 0.8.0 artifact/hash.
+PyPI publication and index visibility are C35. Never claim PyPI publication
+complete until its JSON exposes all exact 0.8.0 artifact hashes.
 
 ## Cross-card rules
 
