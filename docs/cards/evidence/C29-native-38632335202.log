@@ -1,0 +1,21 @@
+run: 38632335202
+commit: 41e8a89eeca30d2972880fef1704ab3033eb8dca
+conclusion: success
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:29:47.9042794Z PASSED ../../../../../dev::test_installed_console_entry_reports_distribution_version
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:29:47.9043521Z PASSED ../../../../../dev::test_installed_console_flushes_child_output_exactly[stdout without newline-stderr without newline]
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:29:47.9044381Z PASSED ../../../../../dev::test_installed_console_flushes_child_output_exactly[stdout with newline\n-stderr with newline\n]
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:29:47.9045047Z PASSED ../../../../../dev::test_installed_python_package_exposes_rust_api
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:29:47.9045424Z 4 passed in 0.29s
+ubuntu-latest wheel	Build and test installed native wheel	2026-10-14T20:29:47.9045871Z GREEN C24-linux: exit=0, reported passed=4; log=/home/runner/work/vsh/vsh/target/card-logs/C24-linux.log
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:31:33.7167446Z PASSED \\.\nul::test_installed_console_entry_reports_distribution_version
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:31:33.7167870Z PASSED \\.\nul::test_installed_console_flushes_child_output_exactly[stdout without newline-stderr without newline]
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:31:33.7168338Z PASSED \\.\nul::test_installed_console_flushes_child_output_exactly[stdout with newline\n-stderr with newline\n]
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:31:33.7168722Z PASSED \\.\nul::test_installed_python_package_exposes_rust_api
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:31:33.7168970Z 4 passed in 0.34s
+windows-latest wheel	Build and test installed native wheel	2026-10-14T20:31:33.7169250Z GREEN C24-windows: exit=0, reported passed=4; log=D:\a\vsh\vsh\target\card-logs\C24-windows.log
+macos-15 wheel	Build and test installed native wheel	2026-10-14T20:37:16.5551430Z PASSED ../../../../../dev::test_installed_console_entry_reports_distribution_version
+macos-15 wheel	Build and test installed native wheel	2026-10-14T20:37:16.5553010Z PASSED ../../../../../dev::test_installed_console_flushes_child_output_exactly[stdout without newline-stderr without newline]
+macos-15 wheel	Build and test installed native wheel	2026-10-14T20:37:16.5554940Z PASSED ../../../../../dev::test_installed_console_flushes_child_output_exactly[stdout with newline\n-stderr with newline\n]
+macos-15 wheel	Build and test installed native wheel	2026-10-14T20:37:16.5556440Z PASSED ../../../../../dev::test_installed_python_package_exposes_rust_api
+macos-15 wheel	Build and test installed native wheel	2026-10-14T20:37:16.5557260Z 4 passed in 0.34s
+macos-15 wheel	Build and test installed native wheel	2026-10-14T20:37:16.5558330Z GREEN C24-darwin: exit=0, reported passed=4; log=/Users/runner/work/vsh/vsh/target/card-logs/C24-darwin.log
